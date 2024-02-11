@@ -11,6 +11,7 @@
 #include "util/CStatus.hpp"
 #include "util/SFile.hpp"
 #include <cstring>
+#include <cstdio>
 
 void CM2Shared::LoadFailedCallback(void* arg) {
     CM2Shared* shared = static_cast<CM2Shared*>(arg);
