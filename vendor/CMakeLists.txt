@@ -1,5 +1,6 @@
 add_subdirectory(freetype-2.0.9)
 add_subdirectory(lua-5.1.3)
+add_subdirectory(stormlib-9)
 
 if (WHOA_SYSTEM_WIN OR WHOA_SYSTEM_LINUX)
     set(SDL_SHARED OFF)

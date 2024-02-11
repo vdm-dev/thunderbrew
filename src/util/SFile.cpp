@@ -1,27 +1,31 @@
 #include "util/SFile.hpp"
 #include <cstring>
 #include <limits>
+#include <StormLib.h>
 #include <storm/Memory.hpp>
 #include <storm/String.hpp>
-#include <bc/file/File.hpp>
+#include "util/Filesystem.hpp"
 
 static char s_basepath[STORM_MAX_PATH] = {0};
 static char s_datapath[STORM_MAX_PATH] = {0};
 
 // TODO Proper implementation
 int32_t SFile::Close(SFile* file) {
-    delete file->m_filename;
-
-    Blizzard::File::Close(file->m_stream);
-
+    SFileCloseFile(file->m_handle);
     delete file;
-
     return 1;
 }
 
 // TODO Proper implementation
-size_t SFile::GetFileSize(SFile* file, size_t* filesizeHigh) {
-    return file->m_size;
+uint32_t SFile::GetFileSize(SFile* file, uint32_t* filesizeHigh) {
+    DWORD high = 0;
+    DWORD low = SFileGetFileSize(file->m_handle, &high);
+
+    if (filesizeHigh) {
+        *filesizeHigh = high;
+    }
+
+    return low;
 }
 
 int32_t SFile::IsStreamingMode() {
@@ -31,39 +35,47 @@ int32_t SFile::IsStreamingMode() {
 
 // TODO Proper implementation
 int32_t SFile::Load(SArchive* archive, const char* filename, void** buffer, size_t* bytes, size_t extraBytes, uint32_t flags, SOVERLAPPED* overlapped) {
-    auto pathLen = SStrLen(filename);
-    char path[STORM_MAX_PATH];
-    SStrCopy(path, filename, sizeof(path));
-
-    uint32_t openflags = BC_FILE_OPEN_MUST_EXIST | BC_FILE_OPEN_SHARE_READ | BC_FILE_OPEN_READ;
-    Blizzard::File::StreamRecord* stream;
-    bool opened = Blizzard::File::Open(path, openflags, stream);
-    size_t size;
-    char* data;
-
-    if (opened) {
-        size = static_cast<size_t>(Blizzard::File::GetFileInfo(stream)->size);
-
-        if (bytes) {
-            *bytes = size;
-        }
-
-        data = new char[size + extraBytes];
-
-        Blizzard::File::SetPos(stream, 0, BC_FILE_SEEK_START);
-        Blizzard::File::Read(stream, data, size, nullptr);
-        Blizzard::File::Close(stream);
-
-        if (extraBytes) {
-            memset(data + size, 0, extraBytes);
-        }
-
-        *buffer = data;
-
-        return 1;
-    } else {
+    if (!buffer || !filename) {
         return 0;
     }
+  
+    *buffer = nullptr;
+    if (bytes) {
+        *bytes = 0;
+    }
+      
+    SFile* file = nullptr;
+    if (!SFile::OpenEx(nullptr, filename, 0, &file)) {
+        return 0;
+    }
+
+    uint32_t high = 0;
+    uint64_t size = SFile::GetFileSize(file, &high);
+    size |= ((uint64_t) high << 32);
+
+    auto data = reinterpret_cast<char*>(SMemAlloc(size + extraBytes, __FILE__, __LINE__, 0));
+
+    if (!SFile::Read(file, data, size, nullptr, nullptr, nullptr)) {
+        SMemFree(data, __FILE__, __LINE__, 0);
+        SFile::Close(file);
+        return 0;
+    }
+
+    if (extraBytes) {
+        memset(data + size, 0, extraBytes);
+    }
+
+    if (bytes) {
+        *bytes = size;
+    }
+
+    if (buffer) { 
+        *buffer = data;
+    }
+
+    SFile::Close(file);
+
+    return 1;
 }
 
 int32_t SFile::Open(const char* filename, SFile** file) {
@@ -72,38 +84,48 @@ int32_t SFile::Open(const char* filename, SFile** file) {
 
 // TODO Proper implementation
 int32_t SFile::OpenEx(SArchive* archive, const char* filename, uint32_t flags, SFile** file) {
-    auto pathLen = SStrLen(filename);
-    char path[STORM_MAX_PATH];
-    SStrCopy(path, filename, sizeof(path));
-
-    SFile* fileptr = new SFile;
-
-    fileptr->m_filename = strdup(filename);
-
-    uint32_t openflags = BC_FILE_OPEN_MUST_EXIST | BC_FILE_OPEN_SHARE_READ | BC_FILE_OPEN_READ;
-
-    Blizzard::File::StreamRecord* stream;
-    auto opened = Blizzard::File::Open(fileptr->m_filename, openflags, stream);
-    if (!opened) {
-        *file = nullptr;
+    if (!file || !filename) {
         return 0;
     }
 
-    auto fileinfo = Blizzard::File::GetFileInfo(stream);
+    char path[STORM_MAX_PATH];
 
-    fileptr->m_stream = stream;
-    fileptr->m_size = fileinfo->size;
+    // Overflow protection
+    if (SStrLen(filename) + 1 > STORM_MAX_PATH) {
+        return 0;
+    }
 
-    *file = fileptr;
+    SStrCopy(path, filename, STORM_MAX_PATH);
+    OsFileToNativeSlashes(path);
+
+    HANDLE handle;
+    if (!SFileOpenFileEx(nullptr, path, SFILE_OPEN_LOCAL_FILE, &handle)) {
+        OsFileToBackSlashes(path);
+        if (!SFileOpenFileEx(g_mpqHandle, path, SFILE_OPEN_FROM_MPQ, &handle)) {
+            return 0;
+        }
+    }
+
+    *file = new SFile;
+    (*file)->m_handle = handle;
 
     return 1;
 }
 
 // TODO Proper implementation
 int32_t SFile::Read(SFile* file, void* buffer, size_t bytestoread, size_t* bytesread, SOVERLAPPED* overlapped, TASYNCPARAMBLOCK* asyncparam) {
-    Blizzard::File::Read(file->m_stream, buffer, bytestoread, bytesread);
-
-    return 1;
+    DWORD read = 0;
+    if (SFileReadFile(file->m_handle, buffer, static_cast<DWORD>(bytestoread), &read, nullptr)) {
+        if (bytesread) {
+            *bytesread = read;
+        }
+        return 1;
+    } else {
+        if (bytesread) {
+            *bytesread = 0;
+        }
+        return 0;
+    }
 }
 
 int32_t SFile::Unload(void* ptr) {

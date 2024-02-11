@@ -3,8 +3,6 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include <fstream>
-#include <iostream>
 
 class SArchive;
 struct SOVERLAPPED;
@@ -20,7 +18,7 @@ class SFile {
     public:
         // Static functions
         static int32_t Close(SFile*);
-        static size_t GetFileSize(SFile*, size_t*);
+        static uint32_t GetFileSize(SFile*, uint32_t*);
         static int32_t IsStreamingMode(void);
         static int32_t Load(SArchive*, const char*, void**, size_t*, size_t, uint32_t, SOVERLAPPED*);
         static int32_t Open(const char*, SFile**);
@@ -33,9 +31,7 @@ class SFile {
         static int32_t GetDataPath(char* path, size_t capacity);
 
         // Member variables
-        const char* m_filename;
-        Blizzard::File::StreamRecord* m_stream; // TODO Proper implementation
-        uint64_t m_size; // TODO Proper implementation
+        void* m_handle;
 };
 
 #endif
