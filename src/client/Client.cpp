@@ -175,9 +175,9 @@ int32_t InitializeGlobal() {
 
     // ClientServices::LoadCDKey();
 
-    OpenArchives();
-
     SetPaths();
+
+    OpenArchives();
 
     ConsoleInitializeClientCommand();
 
