@@ -463,7 +463,7 @@ void CGxDevice::IShaderLoad(CGxShader* shaders[], EGxShTarget target, const char
     }
 
     char path[260];
-    SFile* file;
+    SFile* file = nullptr;
 
     while (true) {
         sprintf(path, "%s\\%s\\%s.bls", a4, g_gxShaderProfileNames[target][profile], a5);
