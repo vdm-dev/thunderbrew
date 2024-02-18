@@ -125,6 +125,7 @@ int32_t SFile::OpenEx(SArchive* archive, const char* filename, uint32_t flags, S
 
     // Overflow protection
     if (SStrLen(filename) + 1 > STORM_MAX_PATH) {
+        *file = nullptr;
         return 0;
     }
 
@@ -146,6 +147,7 @@ int32_t SFile::OpenEx(SArchive* archive, const char* filename, uint32_t flags, S
         filetype = SFILE_PAQ;
         filehandle = static_cast<void*>(handle);
     } else {
+        *file = nullptr;
         // could not open either plain or MPQ archived file
         return 0;
     }
