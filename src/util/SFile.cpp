@@ -2,6 +2,7 @@
 #include <cstring>
 #include <limits>
 #include <StormLib.h>
+#include <storm/Error.hpp>
 #include <storm/Memory.hpp>
 #include <storm/String.hpp>
 #include <bc/file/File.hpp>
