@@ -161,7 +161,8 @@ int32_t SFile::Read(SFile* file, void* buffer, size_t bytestoread, size_t* bytes
     switch (file->m_type) {
     case SFILE_PLAIN:
     {
-        Blizzard::File::Read(file->m_stream, buffer, bytestoread, bytesread);
+        auto stream = reinterpret_cast<Blizzard::File::StreamRecord*>(file->m_handle);
+        Blizzard::File::Read(m_stream, buffer, bytestoread, bytesread);
         return 1;
     }
     case SFILE_PAQ:
