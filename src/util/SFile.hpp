@@ -13,6 +13,13 @@ class StreamRecord;
 };
 };
 
+enum SFILE_TYPE {
+    SFILE_PLAIN = 0x0,
+    SFILE_COMPRESSED = 0x1,
+    SFILE_PAQ = 0x2,
+    SFILE_OLD_SFILE = 0x3,
+    SFILE_ZIP_FILE = 0x4
+};
 
 class SFile {
     public:
@@ -31,7 +38,8 @@ class SFile {
         static int32_t GetDataPath(char* path, size_t capacity);
 
         // Member variables
-        void* m_handle;
+        SFILE_TYPE m_type;
+        void*      m_handle;
 };
 
 #endif

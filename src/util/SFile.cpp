@@ -4,6 +4,7 @@
 #include <StormLib.h>
 #include <storm/Memory.hpp>
 #include <storm/String.hpp>
+#include <bc/file/File.hpp>
 #include "util/Filesystem.hpp"
 
 static char s_basepath[STORM_MAX_PATH] = {0};
@@ -11,15 +12,46 @@ static char s_datapath[STORM_MAX_PATH] = {0};
 
 // TODO Proper implementation
 int32_t SFile::Close(SFile* file) {
-    SFileCloseFile(file->m_handle);
+    switch (file->m_type) {
+    case SFILE_PLAIN:
+        Blizzard::File::Close(reinterpret_cast<Blizzard::File::StreamRecord*>(file->m_handle));
+        break;
+    case SFILE_PAQ:
+        SFileCloseFile(file->m_handle);
+        break;
+    default:
+        STORM_ASSERT(0);
+    }
+
     delete file;
     return 1;
 }
 
 // TODO Proper implementation
 uint32_t SFile::GetFileSize(SFile* file, uint32_t* filesizeHigh) {
-    DWORD high = 0;
-    DWORD low = SFileGetFileSize(file->m_handle, &high);
+    uint32_t high = 0;
+    uint32_t low  = 0;
+
+    switch (file->m_type) {
+    case SFILE_PAQ:
+    {
+        // Get size from stormlib
+        DWORD dwHigh = 0;
+        DWORD dwLow = SFileGetFileSize(file->m_handle, &dwHigh);
+        low = static_cast<uint32_t>(dwLow);
+        high = static_cast<uint32_t>(dwHigh);
+        break;
+    }
+    case SFILE_PLAIN:
+    {
+        uint64_t size = Blizzard::File::GetFileInfo(reinterpret_cast<Blizzard::File::StreamRecord*>(file->m_handle))->size;
+        low = size & 0xFFFFFFFF;
+        high = size >> 32;
+        break;
+    }
+    default:
+        STORM_ASSERT(0);
+    }
 
     if (filesizeHigh) {
         *filesizeHigh = high;
@@ -38,12 +70,12 @@ int32_t SFile::Load(SArchive* archive, const char* filename, void** buffer, size
     if (!buffer || !filename) {
         return 0;
     }
-  
+
     *buffer = nullptr;
     if (bytes) {
         *bytes = 0;
     }
-      
+
     SFile* file = nullptr;
     if (!SFile::OpenEx(nullptr, filename, 0, &file)) {
         return 0;
@@ -69,7 +101,7 @@ int32_t SFile::Load(SArchive* archive, const char* filename, void** buffer, size
         *bytes = size;
     }
 
-    if (buffer) { 
+    if (buffer) {
         *buffer = data;
     }
 
@@ -96,36 +128,62 @@ int32_t SFile::OpenEx(SArchive* archive, const char* filename, uint32_t flags, S
     }
 
     SStrCopy(path, filename, STORM_MAX_PATH);
-    OsFileToNativeSlashes(path);
 
+    SFILE_TYPE filetype = SFILE_PLAIN;
+    void* filehandle;
     HANDLE handle;
-    if (!SFileOpenFileEx(nullptr, path, SFILE_OPEN_LOCAL_FILE, &handle)) {
-        OsFileToBackSlashes(path);
-        if (!SFileOpenFileEx(g_mpqHandle, path, SFILE_OPEN_FROM_MPQ, &handle)) {
-            return 0;
-        }
+
+    uint32_t openflags = BC_FILE_OPEN_MUST_EXIST | BC_FILE_OPEN_SHARE_READ | BC_FILE_OPEN_READ;
+    Blizzard::File::StreamRecord* stream;
+
+    // Attempt to open plain file first
+    if (Blizzard::File::Open(path, openflags, stream)) {
+        // plain file was opened
+        filehandle = reinterpret_cast<void*>(stream);
+    // Attempt to open MPQ archived file
+    } else if (SFileOpenFileEx(g_mpqHandle, path, SFILE_OPEN_FROM_MPQ, &handle)) {
+        filetype = SFILE_PAQ;
+        filehandle = static_cast<void*>(handle);
+    } else {
+        // could not open either plain or MPQ archived file
+        return 0;
     }
 
     *file = new SFile;
-    (*file)->m_handle = handle;
+    (*file)->m_handle = filehandle;
+    (*file)->m_type   = filetype;
 
     return 1;
 }
 
 // TODO Proper implementation
 int32_t SFile::Read(SFile* file, void* buffer, size_t bytestoread, size_t* bytesread, SOVERLAPPED* overlapped, TASYNCPARAMBLOCK* asyncparam) {
-    DWORD read = 0;
-    if (SFileReadFile(file->m_handle, buffer, static_cast<DWORD>(bytestoread), &read, nullptr)) {
-        if (bytesread) {
-            *bytesread = read;
-        }
+    switch (file->m_type) {
+    case SFILE_PLAIN:
+    {
+        Blizzard::File::Read(file->m_stream, buffer, bytestoread, bytesread);
         return 1;
-    } else {
-        if (bytesread) {
-            *bytesread = 0;
-        }
-        return 0;
     }
+    case SFILE_PAQ:
+    {
+        DWORD read = 0;
+        if (SFileReadFile(file->m_handle, buffer, static_cast<DWORD>(bytestoread), &read, nullptr)) {
+            if (bytesread) {
+                *bytesread = read;
+            }
+            return 1;
+        } else {
+            if (bytesread) {
+                *bytesread = 0;
+            }
+            return 0;
+        }
+    }
+    default:
+        STORM_ASSERT(0)
+    }
+
+    return 0;
 }
 
 int32_t SFile::Unload(void* ptr) {
