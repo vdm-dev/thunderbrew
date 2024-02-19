@@ -34,8 +34,7 @@ uint32_t SFile::GetFileSize(SFile* file, uint32_t* filesizeHigh) {
     uint32_t low  = 0;
 
     switch (file->m_type) {
-    case SFILE_PAQ:
-    {
+    case SFILE_PAQ: {
         // Get size from stormlib
         DWORD dwHigh = 0;
         DWORD dwLow = SFileGetFileSize(file->m_handle, &dwHigh);
@@ -43,8 +42,7 @@ uint32_t SFile::GetFileSize(SFile* file, uint32_t* filesizeHigh) {
         high = static_cast<uint32_t>(dwHigh);
         break;
     }
-    case SFILE_PLAIN:
-    {
+    case SFILE_PLAIN: {
         uint64_t size = Blizzard::File::GetFileInfo(reinterpret_cast<Blizzard::File::StreamRecord*>(file->m_handle))->size;
         low = size & 0xFFFFFFFF;
         high = size >> 32;
@@ -162,14 +160,12 @@ int32_t SFile::OpenEx(SArchive* archive, const char* filename, uint32_t flags, S
 // TODO Proper implementation
 int32_t SFile::Read(SFile* file, void* buffer, size_t bytestoread, size_t* bytesread, SOVERLAPPED* overlapped, TASYNCPARAMBLOCK* asyncparam) {
     switch (file->m_type) {
-    case SFILE_PLAIN:
-    {
+    case SFILE_PLAIN: {
         auto stream = reinterpret_cast<Blizzard::File::StreamRecord*>(file->m_handle);
         Blizzard::File::Read(stream, buffer, bytestoread, bytesread);
         return 1;
     }
-    case SFILE_PAQ:
-    {
+    case SFILE_PAQ: {
         DWORD read = 0;
         if (SFileReadFile(file->m_handle, buffer, static_cast<DWORD>(bytestoread), &read, nullptr)) {
             if (bytesread) {
