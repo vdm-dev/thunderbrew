@@ -748,6 +748,17 @@ void CSimpleFontString::SetJustifyH(uint8_t justify) {
 
 void CSimpleFontString::SetNonSpaceWrap(int32_t a2) {
     // TODO
+    // Proper implementation
+    uint32_t styleFlags = a2
+        ? this->m_styleFlags | 0x1000
+        : this->m_styleFlags & ~0x1000;
+
+    if (this->m_styleFlags != styleFlags) {
+        this->m_styleFlags = styleFlags;
+        if (this->m_string) {
+            this->UpdateString();
+        }
+    }
 }
 
 void CSimpleFontString::SetSpacing(float spacing) {

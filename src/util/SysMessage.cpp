@@ -1,10 +1,4 @@
-#include "util/Log.hpp"
-
-bool SLogCreate(const char* filename, uint32_t flags, void* log) {
-    // TODO
-
-    return true;
-}
+#include "util/SysMessage.hpp"
 
 void SysMsgPrintf(SYSMSG_TYPE severity, const char* format, ...) {
     // TODO

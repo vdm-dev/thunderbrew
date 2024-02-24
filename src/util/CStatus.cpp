@@ -4,8 +4,14 @@
 
 CStatus CStatus::s_errorList;
 
-void CStatus::Add(const CStatus& status) {
+void CStatus::Add(const CStatus& source) {
     // TODO
+    // Remove const_cast<> workaround
+    CStatus& src = const_cast<CStatus&>(source);
+
+    for (auto i = src.statusList.Head(); i; i = src.statusList.Next(i)) {
+        this->Add(i->severity, i->text);
+    }
 }
 
 void CStatus::Add(STATUS_TYPE severity, const char* format, ...) {
