@@ -1,14 +1,20 @@
-# Whoa
+# Thunderbrew
 
-[![Push](https://github.com/whoahq/whoa/actions/workflows/push.yml/badge.svg)](https://github.com/whoahq/whoa/actions/workflows/push.yml)
+[![Push](https://github.com/thunderbrewhq/thunderbrew/actions/workflows/push.yml/badge.svg)](https://github.com/thunderbrewhq/thunderbrew/actions/workflows/push.yml)
 
-Welcome to Whoa, an unofficial open source implementation of the World of Warcraft 3.3.5a (build 12340) game client in C++11.
+Welcome to Thunderbrew, a fork of [Whoa](https://github.com/whoahq/whoa), an unofficial open source implementation of the World of Warcraft 3.3.5a (build 12340) game client in C++11.
 
 ## Supported Platforms
 
-Currently, Windows 10+ and macOS 10.14+ are supported, including recent versions of macOS on M1 and M2 processors. Support for Linux is in progress.
+Currently, Windows 10+, macOS 10.14+ (including recent versions of macOS on M1 and M2 processors), and Ubuntu 22.04 are supported.
 
 ## Building
+
+On Ubuntu, the following packages are required to build Thunderbrew:
+
+```bash
+sudo apt install -y libglx-dev libxext-dev libopengl-dev libglvnd-dev
+```
 
 To build, ensure you have installed a recent version of CMake and an appropriate C++ build environment, and run the following from the `whoa` directory:
 
@@ -22,7 +28,9 @@ Assuming all went well, you should see a `dist/bin` directory appear in the `bui
 
 ## Running
 
-Whoa doesn't currently support reading from MPQ archives. Instead, it assumes you are launching the Whoa executable from the root of a fully extracted MPQ archive set for World of Warcraft 3.3.5a (build 12340). You can obtain a valid set of MPQ archives to extract by installing World of Warcraft 3.3.5a from legally purchased original install media. Whoa does not provide any copy of game data.
+The data directory must either be a fully extracted MPQ archive set for World of Warcraft 3.3.5a (build 12340), or a directory that contains a `Data` subdirectory with 3.3.5a MPQ archives. 
+
+Thunderbrew will attempt change its working directory at startup to the directory that contains the Whoa binary. You can either move your `Whoa` binary to the same directory that contains `Data/` and `WTF/`, launching it from there, or you can supply a different directory with the `-datadir \path\to\game_dir` command line switch. Note that the `-datadir` parameter must be specified with backslashes (\\), even on MacOS and Linux.
 
 Assuming all goes well, you should be greeted by the login screen, complete with its flying dragon animation loop.
 
