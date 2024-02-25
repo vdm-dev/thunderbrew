@@ -1,6 +1,0 @@
-#ifndef SOUND_SI2_SCRIPT_HPP
-#define SOUND_SI2_SCRIPT_HPP
-
-#define NUM_SCRIPT_FUNCTIONS_SI2 23
-
-#endif
