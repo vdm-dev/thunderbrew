@@ -3,6 +3,9 @@
 #include "console/CVar.hpp"
 #include <storm/Memory.hpp>
 
+FMOD::System* SI2::sm_pGameSystem = nullptr;
+FMOD::System* SI2::sm_pChatSystem = nullptr;
+
 void* F_CALL FMOD_Alloc(unsigned int size, FMOD_MEMORY_TYPE type, const char* sourcestr) {
     return SMemAlloc(size, sourcestr, 0, 0);
 }
@@ -32,8 +35,35 @@ int32_t SI2::Init(int32_t flag) {
     SI2_LOG("=> Setting up Game Sound:");
     SI2_LOG(" - SESound Engine Init");
 
-    auto errcode = FMOD::Memory_Initialize(nullptr, 0, &FMOD_Alloc, &FMOD_ReAlloc, &FMOD_Free);
-    SI2_ERR(errcode, " - FMOD Memory Init");
+    SI2_LOG(" - FMOD Memory Init");
+    FMOD::Memory_Initialize(nullptr, 0, &FMOD_Alloc, &FMOD_ReAlloc, &FMOD_Free);
+    // sub_877440(&off_B1D5E4);
+
+    SI2_LOG(" - FMOD System Create");
+    auto errcode = FMOD::System_Create(&sm_pGameSystem);
+    if (errcode) {
+        if (errcode != FMOD_ERR_DSP_SILENCE && errcode != FMOD_ERR_INVALID_VECTOR && errcode != FMOD_ERR_RECORD) {
+            SI2_ERR(errcode, "");
+        }
+        SI2_LOG(" -###########################################################################################");
+        SI2_ERR(errcode, " -######## ERROR INITIALIZING. ALL GAME SOUND DISABLED.");
+        SI2_LOG(" -###########################################################################################");
+        sm_pGameSystem->setOutput(FMOD_OUTPUTTYPE_NOSOUND);
+        goto LABEL_9;
+    }
+
+    errcode = FMOD::System_Create(&sm_pChatSystem);
+    if (errcode != FMOD_ERR_DSP_SILENCE && errcode != FMOD_ERR_INVALID_VECTOR && errcode != FMOD_ERR_RECORD) {
+        SI2_ERR(errcode, "");
+    }
+
+    if (sm_pChatSystem && sm_pChatSystem->init(4, FMOD_INIT_NORMAL, nullptr)) {
+        sm_pChatSystem->setOutput(FMOD_OUTPUTTYPE_NOSOUND);
+    }
+
+    sm_pGameSystem->setOutput(FMOD_OUTPUTTYPE_AUTODETECT);
+
+LABEL_9:
 
     return 0;
 }

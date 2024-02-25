@@ -18,6 +18,8 @@ class SI2 {
         static FrameScript_Method s_ScriptFunctions[];
         static uint32_t sm_logFlags;
         static HSLOG sm_log;
+        static FMOD::System* sm_pGameSystem;
+        static FMOD::System* sm_pChatSystem;
 
         // Static functions
         static void RegisterScriptFunctions();
