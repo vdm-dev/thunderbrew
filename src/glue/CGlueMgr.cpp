@@ -4,6 +4,7 @@
 #include "client/ClientServices.hpp"
 #include "gx/Coordinate.hpp"
 #include "gx/Device.hpp"
+#include "gx/CGVideoOptions.hpp"
 #include "math/Utils.hpp"
 #include "net/Connection.hpp"
 #include "net/Login.hpp"
@@ -512,7 +513,8 @@ void CGlueMgr::Resume() {
 
     // TODO
     // AccountMsg_RegisterScriptFunctions();
-    // CGVideoOptions::RegisterScriptFunctions();
+
+    CGVideoOptions::RegisterScriptFunctions();
 
     // TODO
     // FrameScript::s_scriptFunctionsLoaded = 1;
