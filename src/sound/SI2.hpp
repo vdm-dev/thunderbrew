@@ -5,7 +5,7 @@
 #include <storm/Log.hpp>
 #include <cstdint>
 #include <cstdarg>
-#include <fmod.h>
+#include <fmod.hpp>
 #include <fmod_errors.h>
 
 
@@ -26,6 +26,7 @@ class SI2 {
         static void Log_Write(uint32_t line, const char* filename, FMOD_RESULT errcode, const char* format, ...);
         static void RegisterCVars();
         static int32_t Init(int32_t flag);
+        static void StartGlueMusic(const char* filename);
 };
 
 #endif

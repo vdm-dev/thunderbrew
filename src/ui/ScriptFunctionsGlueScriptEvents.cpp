@@ -11,6 +11,7 @@
 #include "util/Lua.hpp"
 #include "util/SFile.hpp"
 #include "util/Unimplemented.hpp"
+#include "sound/SI2.hpp"
 #include <cstdint>
 
 int32_t Script_IsShiftKeyDown(lua_State* L) {
@@ -80,7 +81,12 @@ int32_t Script_QuitGameAndRunLauncher(lua_State* L) {
 }
 
 int32_t Script_PlayGlueMusic(lua_State* L) {
-    WHOA_UNIMPLEMENTED(0);
+    if (!lua_isstring(L, 1)) {
+        return luaL_error(L, "Usage: PlayGlueMusic(\"filename\")");
+    }
+
+    SI2::StartGlueMusic(lua_tolstring(L, 1, 0));
+    return 0;
 }
 
 int32_t Script_PlayCreditsMusic(lua_State* L) {
