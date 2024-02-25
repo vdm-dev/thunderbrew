@@ -21,7 +21,8 @@ int32_t Script_StopMusic(lua_State* L) {
 }
 
 int32_t Script_Sound_GameSystem_GetNumInputDrivers(lua_State* L) {
-    WHOA_UNIMPLEMENTED(0);
+    lua_pushnumber(L, 0.0);
+    return 1;
 }
 
 int32_t Script_Sound_GameSystem_GetInputDriverNameByIndex(lua_State* L) {
@@ -29,7 +30,10 @@ int32_t Script_Sound_GameSystem_GetInputDriverNameByIndex(lua_State* L) {
 }
 
 int32_t Script_Sound_GameSystem_GetNumOutputDrivers(lua_State* L) {
-    WHOA_UNIMPLEMENTED(0);
+    // TODO:
+    // NumOutputDrivers = (double)(int)SE3::GetNumOutputDrivers(SE3::sm_pGameSystem, v3);
+    lua_pushnumber(L, 0.0);
+    return 1;
 }
 
 int32_t Script_Sound_GameSystem_GetOutputDriverNameByIndex(lua_State* L) {
