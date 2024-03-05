@@ -1,4 +1,3 @@
-#include "sound/SI2Script.hpp"
 #include "sound/SI2.hpp"
 #include "ui/Types.hpp"
 #include "util/Lua.hpp"
@@ -21,7 +20,8 @@ int32_t Script_StopMusic(lua_State* L) {
 }
 
 int32_t Script_Sound_GameSystem_GetNumInputDrivers(lua_State* L) {
-    WHOA_UNIMPLEMENTED(0);
+    lua_pushnumber(L, 0.0);
+    return 1;
 }
 
 int32_t Script_Sound_GameSystem_GetInputDriverNameByIndex(lua_State* L) {
@@ -29,7 +29,10 @@ int32_t Script_Sound_GameSystem_GetInputDriverNameByIndex(lua_State* L) {
 }
 
 int32_t Script_Sound_GameSystem_GetNumOutputDrivers(lua_State* L) {
-    WHOA_UNIMPLEMENTED(0);
+    // TODO:
+    // NumOutputDrivers = (double)(int)SE3::GetNumOutputDrivers(SE3::sm_pGameSystem, v3);
+    lua_pushnumber(L, 0.0);
+    return 1;
 }
 
 int32_t Script_Sound_GameSystem_GetOutputDriverNameByIndex(lua_State* L) {
@@ -96,7 +99,7 @@ int32_t Script_VoiceChat_ActivatePrimaryCaptureCallback(lua_State* L) {
     WHOA_UNIMPLEMENTED(0);
 }
 
-FrameScript_Method SI2::s_ScriptFunctions[NUM_SCRIPT_FUNCTIONS_SI2] = {
+FrameScript_Method SI2::s_ScriptFunctions[] = {
     { "PlaySound",                                      &Script_PlaySound },
     { "PlayMusic",                                      &Script_PlayMusic },
     { "PlaySoundFile",                                  &Script_PlaySoundFile },
@@ -119,5 +122,6 @@ FrameScript_Method SI2::s_ScriptFunctions[NUM_SCRIPT_FUNCTIONS_SI2] = {
     { "VoiceChat_IsRecordingLoopbackSound",             &Script_VoiceChat_IsRecordingLoopbackSound },
     { "VoiceChat_IsPlayingLoopbackSound",               &Script_VoiceChat_IsPlayingLoopbackSound },
     { "VoiceChat_GetCurrentMicrophoneSignalLevel",      &Script_VoiceChat_GetCurrentMicrophoneSignalLevel },
-    { "VoiceChat_ActivatePrimaryCaptureCallback",       &Script_VoiceChat_ActivatePrimaryCaptureCallback }
+    { "VoiceChat_ActivatePrimaryCaptureCallback",       &Script_VoiceChat_ActivatePrimaryCaptureCallback },
+    { nullptr, nullptr }
 };

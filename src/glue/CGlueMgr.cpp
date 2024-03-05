@@ -4,6 +4,7 @@
 #include "client/ClientServices.hpp"
 #include "gx/Coordinate.hpp"
 #include "gx/Device.hpp"
+#include "gx/CGVideoOptions.hpp"
 #include "math/Utils.hpp"
 #include "net/Connection.hpp"
 #include "net/Login.hpp"
@@ -16,7 +17,7 @@
 #include "ui/ScriptFunctions.hpp"
 #include "console/CVar.hpp"
 #include "util/Filesystem.hpp"
-#include "util/Log.hpp"
+#include "util/SysMessage.hpp"
 #include <cstdio>
 #include <common/MD5.hpp>
 
@@ -512,7 +513,8 @@ void CGlueMgr::Resume() {
 
     // TODO
     // AccountMsg_RegisterScriptFunctions();
-    // CGVideoOptions::RegisterScriptFunctions();
+
+    CGVideoOptions::RegisterScriptFunctions();
 
     // TODO
     // FrameScript::s_scriptFunctionsLoaded = 1;
@@ -523,7 +525,7 @@ void CGlueMgr::Resume() {
 
     CWOWClientStatus status;
 
-    if (!SLogCreate("Logs\\GlueXML.log", 0, status.m_logFile)) {
+    if (!SLogCreate("Logs\\GlueXML.log", 0, &status.m_logFile)) {
         SysMsgPrintf(SYSMSG_WARNING, "Cannot create WOWClient log file \"%s\"!", "Logs\\GlueXML.log");
     }
 

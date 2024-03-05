@@ -1,5 +1,5 @@
-#ifndef UTIL_LOG_HPP
-#define UTIL_LOG_HPP
+#ifndef UTIL_SYSMESSAGE_HPP
+#define UTIL_SYSMESSAGE_HPP
 
 #include <cstdint>
 
@@ -10,8 +10,6 @@ enum SYSMSG_TYPE {
     SYSMSG_FATAL        = 0x3,
     SYSMSG_NUMTYPES     = 0x4
 };
-
-bool SLogCreate(const char*, uint32_t, void*);
 
 void SysMsgPrintf(SYSMSG_TYPE, const char*, ...);
 

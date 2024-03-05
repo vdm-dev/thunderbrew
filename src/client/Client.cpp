@@ -19,6 +19,7 @@
 #include <bc/Debug.hpp>
 #include <common/Prop.hpp>
 #include <storm/Error.hpp>
+#include <storm/Log.hpp>
 #include <bc/os/Path.hpp>
 
 CVar* Client::g_accountListVar;
@@ -150,6 +151,7 @@ void SetPaths() {
         datadir = buffer;
     }
 
+    SLogSetDefaultDirectory(datadir);
     SFile::SetBasePath(datadir);
     SFile::SetDataPath("Data\\");
 
@@ -368,7 +370,7 @@ void StormInitialize() {
     // TODO
     // SStrInitialize();
     // SErrInitialize();
-    // SLogInitialize();
+    SLogInitialize();
     // SFile::Initialize();
 
     Blizzard::Debug::SetAssertHandler(BlizzardAssertCallback);
