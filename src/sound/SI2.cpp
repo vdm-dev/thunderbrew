@@ -18,17 +18,14 @@ void F_CALL FMOD_Free(void* ptr, FMOD_MEMORY_TYPE type, const char* sourcestr) {
     SMemFree(ptr, sourcestr, 0, 0);
 }
 
-
 void SI2::RegisterScriptFunctions() {
-    FrameScript_Method* item = s_ScriptFunctions;
-    while (item->name) {
+    for (int32_t i = 0; i < s_NumScriptFunctions; i++) {
+        auto item = &s_ScriptFunctions[i];
         FrameScript_RegisterFunction(item->name, item->method);
-        item++;
     }
 }
 
 int32_t SI2::Init(int32_t flag) {
-
     Log_Init();
     SI2_LOG("=> Version %s (%s) %s", "1.0.0", "00000", "Feb 25 2024");
     SI2_LOG(" ");

@@ -7,7 +7,7 @@ int32_t GLMipmap::GetDepthBits() {
     return this->m_DepthBits;
 }
 
-void GLMipmap::Attach(GLFramebuffer* framebuffer, GLenum attachPoint, int32_t a4) {
+void GLMipmap::Attach(GLFramebuffer* framebuffer, GLenum attachPoint, int32_t level) {
     if (!this->m_AttachPoints) {
         this->m_AttachPoints = new std::vector<GLAttachPoint>();
     }
@@ -44,7 +44,7 @@ void GLMipmap::Attach(GLFramebuffer* framebuffer, GLenum attachPoint, int32_t a4
                 GL_TEXTURE_3D,
                 this->m_Texture->m_TextureID,
                 this->m_Level,
-                a4
+                level
             );
         } else {
             glFramebufferTexture2DEXT(
@@ -67,7 +67,7 @@ void GLMipmap::Attach(GLFramebuffer* framebuffer, GLenum attachPoint, int32_t a4
 
     auto& attach = attachPoints[framebufferID];
     attach.framebuffer = framebuffer;
-    attach.zOffset = a4;
+    attach.zOffset = level;
 
     if (
         (attach.point != GL_DEPTH_ATTACHMENT || attachPoint != GL_STENCIL_ATTACHMENT)

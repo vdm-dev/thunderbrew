@@ -16,6 +16,7 @@ class SI2 {
     public:
         // Static variables
         static FrameScript_Method s_ScriptFunctions[];
+        static size_t s_NumScriptFunctions;
         static uint32_t sm_logFlags;
         static HSLOG sm_log;
         static FMOD::System* sm_pGameSystem;

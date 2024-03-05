@@ -122,6 +122,7 @@ FrameScript_Method SI2::s_ScriptFunctions[] = {
     { "VoiceChat_IsRecordingLoopbackSound",             &Script_VoiceChat_IsRecordingLoopbackSound },
     { "VoiceChat_IsPlayingLoopbackSound",               &Script_VoiceChat_IsPlayingLoopbackSound },
     { "VoiceChat_GetCurrentMicrophoneSignalLevel",      &Script_VoiceChat_GetCurrentMicrophoneSignalLevel },
-    { "VoiceChat_ActivatePrimaryCaptureCallback",       &Script_VoiceChat_ActivatePrimaryCaptureCallback },
-    { nullptr, nullptr }
+    { "VoiceChat_ActivatePrimaryCaptureCallback",       &Script_VoiceChat_ActivatePrimaryCaptureCallback }
 };
+
+size_t SI2::s_NumScriptFunctions = sizeof(SI2::s_ScriptFunctions) / sizeof(FrameScript_Method);

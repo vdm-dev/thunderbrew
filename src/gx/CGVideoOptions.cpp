@@ -32,14 +32,14 @@ FrameScript_Method CGVideoOptions::s_ScriptFunctions[] = {
     { "GetRefreshRates", &Script_GetRefreshRates },
     { "GetCurrentMultisampleFormat", &Script_GetCurrentMultisampleFormat },
     { "GetMultisampleFormats", &Script_GetMultisampleFormats },
-    { "IsStereoVideoAvailable", &Script_IsStereoVideoAvailable },
-    { nullptr, nullptr }
+    { "IsStereoVideoAvailable", &Script_IsStereoVideoAvailable }
 };
 
+size_t CGVideoOptions::s_NumScriptFunctions = sizeof(CGVideoOptions::s_ScriptFunctions) / sizeof(FrameScript_Method);
+
 void CGVideoOptions::RegisterScriptFunctions() {
-    FrameScript_Method* item = s_ScriptFunctions;
-    while (item->name) {
+    for (int32_t i = 0; i < CGVideoOptions::s_NumScriptFunctions; i++) {
+        auto item = &s_ScriptFunctions[i];
         FrameScript_RegisterFunction(item->name, item->method);
-        item++;
     }
 }

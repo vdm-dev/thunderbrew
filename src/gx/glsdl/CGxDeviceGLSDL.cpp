@@ -1268,8 +1268,6 @@ void CGxDeviceGLSDL::SceneClear(uint32_t mask, CImVector color) {
 }
 
 void CGxDeviceGLSDL::ScenePresent() {
-    this->m_GLSDLWindow.DispatchEvents();
-
     if (this->m_context) {
         // TODO
 
