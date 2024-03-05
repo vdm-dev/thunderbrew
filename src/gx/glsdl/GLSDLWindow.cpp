@@ -209,7 +209,9 @@ void GLSDLWindow::Create(const char* title, const GLSDLWindowRect& rect, GLTextu
 
 void GLSDLWindow::Swap() {
     SDL_GL_SwapWindow(this->m_sdlWindow);
+}
 
+void GLSDLWindow::DispatchEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         this->DispatchSDLEvent(event);
