@@ -8,7 +8,7 @@ class CGVideoOptions {
     public:
         // Static variables
         static FrameScript_Method s_ScriptFunctions[];
-        static size_t CGVideoOptions::s_NumScriptFunctions;
+        static size_t s_NumScriptFunctions;
 
         // Static functions
         static void RegisterScriptFunctions();
