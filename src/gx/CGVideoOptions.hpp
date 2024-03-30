@@ -2,7 +2,7 @@
 #define GX_C_GX_VIDEO_OPTIONS_HPP
 
 #include "ui/Types.hpp"
-#include <cstdint>
+#include <cstddef>
 
 class CGVideoOptions {
     public:
