@@ -13,6 +13,9 @@ target_link_libraries(sound
     PRIVATE
         ui
         util
-    PUBLIC
-        fmod
 )
+
+if(WHOA_BUILD_FMOD)
+    target_link_libraries(sound PUBLIC fmod)
+endif()
+
