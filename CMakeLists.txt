@@ -28,9 +28,20 @@ set(CMAKE_BUILD_TYPE Debug)
 
 include(lib/system/cmake/system.cmake)
 
-# Some templates abuse offsetof
-if(WHOA_SYSTEM_LINUX OR WHOA_SYSTEM_MAC)
+# Compiler options
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" or CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # Some templates abuse offsetof
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT DEFINED WHOA_ALLOW_UNDEFINED_BEHAVIOR)
+        # Enable UBsan
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+        # Allow strange alignments
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize=alignment")
+    else()
+        # Disable UBsan completely
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize=undefined")
+    endif()
 endif()
 
 # OS defines
