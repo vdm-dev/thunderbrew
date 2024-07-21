@@ -14,7 +14,7 @@ endif()
 
 # FMOD
 
-if(defined WHOA_BUILD_FMOD)
+if(DEFINED WHOA_BUILD_FMOD)
     add_library(fmod SHARED IMPORTED GLOBAL)
     # Determine which flavor of FMOD to use:
     # - macOS versions from 10.9 down prefer FMOD Ex
