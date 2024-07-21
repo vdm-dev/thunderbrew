@@ -198,6 +198,8 @@ void GLSDLWindow::Create(const char* title, const GLSDLWindowRect& rect, GLTextu
 
     this->m_sdlWindow = SDL_CreateWindow(
         title,
+        0,
+        0,
         static_cast<int>(rect.size.width), static_cast<int>(rect.size.height),
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
     );
@@ -229,17 +231,15 @@ GLSDLWindowRect GLSDLWindow::GetRect() {
 
     int origin_x = 0;
     int origin_y = 0;
-    if (SDL_GetWindowPosition(this->m_sdlWindow, &origin_x, &origin_y) == 0) {
-        rect.origin.x = static_cast<int32_t>(origin_x);
-        rect.origin.y = static_cast<int32_t>(origin_y);
-    }
+    SDL_GetWindowPosition(this->m_sdlWindow, &origin_x, &origin_y);
+    rect.origin.x = static_cast<int32_t>(origin_x);
+    rect.origin.y = static_cast<int32_t>(origin_y);
 
     int width  = 0;
     int height = 0;
-    if (SDL_GetWindowSize(this->m_sdlWindow, &width, &height) == 0) {
-        rect.size.width  = static_cast<int32_t>(width);
-        rect.size.height = static_cast<int32_t>(height);
-    }
+    SDL_GetWindowSize(this->m_sdlWindow, &width, &height);
+    rect.size.width  = static_cast<int32_t>(width);
+    rect.size.height = static_cast<int32_t>(height);
 
     return rect;
 }
@@ -251,10 +251,9 @@ GLSDLWindowRect GLSDLWindow::GetBackingRect() {
     // Query backing width/height
     int width  = 0;
     int height = 0;
-    if (SDL_GetWindowSizeInPixels(this->m_sdlWindow, &width, &height) == 0) {
-        rect.size.width  = static_cast<int32_t>(width);
-        rect.size.height = static_cast<int32_t>(height);
-    }
+    SDL_GetWindowSizeInPixels(this->m_sdlWindow, &width, &height);
+    rect.size.width  = static_cast<int32_t>(width);
+    rect.size.height = static_cast<int32_t>(height);
 
     return rect;
 }
@@ -263,8 +262,8 @@ void GLSDLWindow::Resize(const GLSDLWindowRect& rect) {
     auto current = this->GetBackingRect();
 
     if (current.size.width != rect.size.width || current.size.height != rect.size.width) {
-        auto status = SDL_SetWindowSize(this->m_sdlWindow, rect.size.width, rect.size.height);
-        BLIZZARD_ASSERT(status == 0);
+        SDL_SetWindowSize(this->m_sdlWindow, rect.size.width, rect.size.height);
+        // BLIZZARD_ASSERT(status == 0);
     }
 }
 
@@ -278,24 +277,24 @@ int32_t GLSDLWindow::GetHeight() {
 
 void GLSDLWindow::DispatchSDLEvent(const SDL_Event& event) {
     switch (event.type) {
-    case SDL_EVENT_KEY_DOWN:
-    case SDL_EVENT_KEY_UP:
+    case SDL_KEYDOWN:
+    case SDL_KEYUP:
         this->DispatchSDLKeyboardEvent(event);
         break;
-    case SDL_EVENT_MOUSE_BUTTON_DOWN:
-    case SDL_EVENT_MOUSE_BUTTON_UP:
+    case SDL_MOUSEBUTTONDOWN:
+    case SDL_MOUSEBUTTONUP:
         this->DispatchSDLMouseButtonEvent(event);
         break;
-    case SDL_EVENT_MOUSE_MOTION:
+    case SDL_MOUSEMOTION:
         this->DispatchSDLMouseMotionEvent(event);
         break;
-    case SDL_EVENT_TEXT_INPUT:
+    case SDL_TEXTINPUT:
         this->DispatchSDLTextInputEvent(event);
         break;
-    case SDL_EVENT_WINDOW_RESIZED:
+    case SDL_WINDOWEVENT_RESIZED:
         this->DispatchSDLWindowResizedEvent(event);
         break;
-    case SDL_EVENT_QUIT:
+    case SDL_QUIT:
         EventPostClose();
         break;
     default:
@@ -305,7 +304,7 @@ void GLSDLWindow::DispatchSDLEvent(const SDL_Event& event) {
 
 void GLSDLWindow::DispatchSDLKeyboardEvent(const SDL_Event& event) {
     // Is this an up or down keypress?
-    OSINPUT inputclass = event.type == SDL_EVENT_KEY_UP ? OS_INPUT_KEY_UP : OS_INPUT_KEY_DOWN;
+    OSINPUT inputclass = event.type == SDL_KEYUP ? OS_INPUT_KEY_UP : OS_INPUT_KEY_DOWN;
 
     // What key does this SDL scancode correspond to?
     auto lookup = s_keyConversion.find(event.key.keysym.scancode);
@@ -329,7 +328,7 @@ void GLSDLWindow::DispatchSDLMouseMotionEvent(const SDL_Event& event) {
 
 void GLSDLWindow::DispatchSDLMouseButtonEvent(const SDL_Event& event) {
     // Is this an up or down mouse click?
-    OSINPUT inputclass = event.type == SDL_EVENT_MOUSE_BUTTON_UP ? OS_INPUT_MOUSE_UP : OS_INPUT_MOUSE_DOWN;
+    OSINPUT inputclass = event.type == SDL_MOUSEBUTTONUP ? OS_INPUT_MOUSE_UP : OS_INPUT_MOUSE_DOWN;
 
     // XY click coordinates
     auto x = static_cast<int32_t>(event.button.x);

@@ -25,10 +25,11 @@ void SI2::Log_Write(const char* format, ...) {
         va_end(va);
     }
 
-    Log_Write(__LINE__, __FILE__, FMOD_OK, output);
+    // Log_Write(__LINE__, __FILE__, FMOD_OK, output);
+    Log_Write(__LINE__, __FILE__, 0, output);
 }
 
-void SI2::Log_Write(uint32_t line, const char* filename, FMOD_RESULT errcode, const char* format, ...) {
+void SI2::Log_Write(uint32_t line, const char* filename, int32_t errcode, const char* format, ...) {
     static uint32_t s_nNumErrors = 0;
 
     if (s_nNumErrors > 200) {
@@ -52,6 +53,7 @@ void SI2::Log_Write(uint32_t line, const char* filename, FMOD_RESULT errcode, co
         va_end(va);
     }
 
+#if defined(WHOA_BUILD_SOUND_FMOD)
     if (errcode == FMOD_OK) {
         SLogWrite(sm_log, output);
         SLogFlush(sm_log);
@@ -62,10 +64,13 @@ void SI2::Log_Write(uint32_t line, const char* filename, FMOD_RESULT errcode, co
     }
 
     SLogWrite(sm_log, " -######## FMOD ERROR! (err %d) %s", errcode, FMOD_ErrorString(errcode));
+#endif
+
     if (format[0]) {
         SLogWrite(sm_log, output);
     }
     SLogWrite(sm_log, "%s(%d)", filename, line);
     SLogFlush(sm_log);
     s_nNumErrors++;
+
 }

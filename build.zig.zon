@@ -1,0 +1,42 @@
+.{ .name = "whoa", .version = "3.3.5", .dependencies = .{
+    .bc = .{
+        .url = "https://github.com/thunderbrewhq/bc/archive/refs/heads/master.zip",
+        .hash = "1220ef571af35d366e093fb7ad65b0ac65dcde291d5bbbd1d2cf42b0b1d59612fa0a",
+    },
+    .common = .{
+            .url = "https://github.com/thunderbrewhq/common/archive/refs/heads/master.zip",
+            .hash = "122083b9b4614e7bc8778f2202d46fa96da7594529b3088708243103700dd3e6f9f2",
+        },
+    .squall = .{
+        .url = "https://github.com/thunderbrewhq/squall/archive/refs/heads/master.zip",
+        .hash = "1220cbe372b510d9f0ecfe42d6e2a819c1baf4e93252911e673d8ce28db256b7fbaf",
+    },
+    .typhoon = .{
+        .url = "https://github.com/thunderbrewhq/typhoon/archive/refs/heads/master.zip",
+        .hash = "1220b606235180891fc4bfaa709050408523b024c5ce8d237eb204e23083eaf4f3bc",
+    },
+    .system = .{
+        .url = "https://github.com/thunderbrewhq/system/archive/refs/heads/master.zip",
+        .hash = "1220d6a6e4e2f836c1c22eb128e6c74c773ea191bfbaac02601dcb5238c2b0874182",
+    },
+    .glew = .{
+        .url = "https://github.com/thunderbrewhq/glew/archive/refs/heads/master.zip",
+        .hash = "12207a20f7a36c864cd82aa0272c18713f1b4318981d821a897b9491432e759eb6a8",
+    },
+    .freetype = .{
+        .url = "https://github.com/thunderbrewhq/freetype/archive/refs/heads/master.zip",
+        .hash = "12206bcb472a69fc610e5d39cbda1ceaba897205daca4b287b6fefeddeb72817d266",
+    },
+    .sdl = .{
+        .url = "https://github.com/thunderbrewhq/sdl/archive/refs/heads/master.zip",
+        .hash = "12206b66f2f21d3fa780a0e6c2623c128f965d84de3daa178338e132e0f00d25123a",
+    },
+    .lua = .{
+        .url = "https://github.com/thunderbrewhq/lua/archive/refs/heads/master.zip",
+        .hash = "12200e9b8b5d49d98a833cf1b34c19ea872c880bf1d8777b07557b2eac1b8a4cf7fe",
+    },
+    .stormlib = .{
+        .url = "https://github.com/thunderbrewhq/stormlib/archive/refs/heads/master.zip",
+        .hash = "1220a383fa2c263cacc9841960af3a87c4c8afb670468894c77b5c05b4b2068af9e4",
+    },
+}, .paths = .{ "src", "build.zig", "build.zig.zon", "LICENSE", "README.md" } }

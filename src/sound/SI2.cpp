@@ -3,6 +3,8 @@
 #include "console/CVar.hpp"
 #include <storm/Memory.hpp>
 
+#if defined(WHOA_BUILD_SOUND_FMOD)
+
 FMOD::System* SI2::sm_pGameSystem = nullptr;
 FMOD::System* SI2::sm_pChatSystem = nullptr;
 
@@ -18,6 +20,8 @@ void F_CALL FMOD_Free(void* ptr, FMOD_MEMORY_TYPE type, const char* sourcestr) {
     SMemFree(ptr, sourcestr, 0, 0);
 }
 
+#endif
+
 void SI2::RegisterScriptFunctions() {
     for (int32_t i = 0; i < s_NumScriptFunctions; i++) {
         auto item = &s_ScriptFunctions[i];
@@ -32,6 +36,7 @@ int32_t SI2::Init(int32_t flag) {
     SI2_LOG("=> Setting up Game Sound:");
     SI2_LOG(" - SESound Engine Init");
 
+#if defined(WHOA_BUILD_SOUND_FMOD)
     SI2_LOG(" - FMOD Memory Init");
     FMOD::Memory_Initialize(nullptr, 0, &FMOD_Alloc, &FMOD_ReAlloc, &FMOD_Free);
     // sub_877440(&off_B1D5E4);
@@ -59,7 +64,7 @@ int32_t SI2::Init(int32_t flag) {
     }
 
     sm_pGameSystem->setOutput(FMOD_OUTPUTTYPE_AUTODETECT);
-
+#endif
 LABEL_9:
 
     return 0;
