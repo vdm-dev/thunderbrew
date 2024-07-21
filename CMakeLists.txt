@@ -33,7 +33,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GN
     # Some templates abuse offsetof
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
 
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT DEFINED WHOA_ALLOW_UNDEFINED_BEHAVIOR)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT WHOA_ALLOW_UNDEFINED_BEHAVIOR)
         # Enable UBsan
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
         # Allow strange alignments
