@@ -5,7 +5,7 @@ add_subdirectory(stormlib-9)
 if (WHOA_SYSTEM_WIN OR WHOA_SYSTEM_LINUX)
     set(SDL_SHARED OFF)
     set(SDL_STATIC ON)
-    add_subdirectory(sdl-3.0.0)
+    add_subdirectory(sdl-2.30.5)
 
     set(glew-cmake_BUILD_SHARED OFF)
     set(glew-cmake_BUILD_STATIC ON)
