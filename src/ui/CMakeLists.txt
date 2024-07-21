@@ -25,5 +25,5 @@ target_link_libraries(ui
         common
         storm
         tempest
-        fmod
+        sound
 )
