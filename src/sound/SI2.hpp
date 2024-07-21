@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <cstdarg>
 
-#if defined(WHOA_BUILD_SOUND_FMOD)
+#if defined(WHOA_BUILD_FMOD)
 
 #include <fmod.hpp>
 #include <fmod_errors.h>

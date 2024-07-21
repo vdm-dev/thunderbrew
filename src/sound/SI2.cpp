@@ -3,7 +3,7 @@
 #include "console/CVar.hpp"
 #include <storm/Memory.hpp>
 
-#if defined(WHOA_BUILD_SOUND_FMOD)
+#if defined(WHOA_BUILD_FMOD)
 
 FMOD::System* SI2::sm_pGameSystem = nullptr;
 FMOD::System* SI2::sm_pChatSystem = nullptr;
@@ -36,7 +36,7 @@ int32_t SI2::Init(int32_t flag) {
     SI2_LOG("=> Setting up Game Sound:");
     SI2_LOG(" - SESound Engine Init");
 
-#if defined(WHOA_BUILD_SOUND_FMOD)
+#if defined(WHOA_BUILD_FMOD)
     SI2_LOG(" - FMOD Memory Init");
     FMOD::Memory_Initialize(nullptr, 0, &FMOD_Alloc, &FMOD_ReAlloc, &FMOD_Free);
     // sub_877440(&off_B1D5E4);
