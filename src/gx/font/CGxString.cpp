@@ -48,8 +48,8 @@ void TEXTLINETEXTURE::WriteGeometry(CGxVertexPCT* buf, const CImVector& fontColo
 
     if (a7) {
         C3Vector shadowTranslation = {
-            viewTranslation.x + floor(ScreenToPixelWidth(0, shadowOffset.x)),
-            viewTranslation.y + floor(ScreenToPixelHeight(0, shadowOffset.y)),
+            viewTranslation.x + std::floor(ScreenToPixelWidth(0, shadowOffset.x)),
+            viewTranslation.y + std::floor(ScreenToPixelHeight(0, shadowOffset.y)),
             viewTranslation.z
         };
 
