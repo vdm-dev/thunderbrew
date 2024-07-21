@@ -29,7 +29,7 @@ set(CMAKE_BUILD_TYPE Debug)
 include(lib/system/cmake/system.cmake)
 
 # Compiler options
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" or CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # Some templates abuse offsetof
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
 
