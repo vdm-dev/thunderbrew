@@ -33,9 +33,9 @@ include(lib/system/cmake/system.cmake)
 # UBsan
 set(WHOA_UB_SAN_HELP_TEXT, "Disable/Enable the Undefined Behavior Sanitizer. This is turned on by default in Debug build types. Has no effect when using MSVC.")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    option(WHOA_UB_SAN, WHOA_UB_SAN_HELP_TEXT, 1)
+    option(WHOA_UB_SAN WHOA_UB_SAN_HELP_TEXT 1)
 else()
-    option(WHOA_UB_SAN, WHOA_UB_SAN_HELP_TEXT, 0)
+    option(WHOA_UB_SAN WHOA_UB_SAN_HELP_TEXT 0)
 endif()
 unset(WHOA_UB_SAN_HELP_TEXT)
 
@@ -52,7 +52,7 @@ else()
 endif()
 
 # FMOD
-option(WHOA_BUILD_FMOD, "Disable/Enable the use of the FMOD sound API. This introduces a dependency on a proprietary FMOD dynamically linked library.", 0)
+option(WHOA_BUILD_FMOD "Disable/Enable the use of the FMOD sound API. This introduces a dependency on a proprietary FMOD dynamically linked library." 0)
 
 # Compiler options
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
