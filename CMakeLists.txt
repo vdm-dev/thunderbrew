@@ -28,8 +28,34 @@ set(CMAKE_BUILD_TYPE Debug)
 
 include(lib/system/cmake/system.cmake)
 
+# Build options
+
+# UBsan
+set(WHOA_UB_SAN_HELP_TEXT, "Disable/Enable the Undefined Behavior Sanitizer. This is turned on by default in Debug build types. Has no effect when using MSVC.")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    option(WHOA_UB_SAN, WHOA_UB_SAN_HELP_TEXT, 1)
+else()
+    option(WHOA_UB_SAN, WHOA_UB_SAN_HELP_TEXT, 0)
+endif()
+unset(WHOA_UB_SAN_HELP_TEXT)
+
+# GLSDL 
+if (WHOA_SYSTEM_WINDOWS)
+    # GLSDL can be disabled on Windows to save time
+    option(WHOA_BUILD_GLSDL "Disable/Enable compilation of the OpenGL/SDL2 graphics rendering device on Windows.", 0)
+elseif(WHOA_SYSTEM_MAC)
+    # No need for this, we already have a functioning OpenGL rendering device (CGxDeviceGLL)
+    set(WHOA_BUILD_GLSDL 0)
+else()
+    # Right now GLSDL is the only rendering device for Linux
+    set(WHOA_BUILD_GLSDL 1)
+endif()
+
+# FMOD
+option(WHOA_BUILD_FMOD, "Disable/Enable the use of the FMOD sound API. This introduces a dependency on a proprietary FMOD dynamically linked library.", 0)
+
 # Compiler options
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # Some templates abuse offsetof
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
 

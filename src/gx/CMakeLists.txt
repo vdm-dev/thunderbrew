@@ -19,8 +19,8 @@ if(WHOA_SYSTEM_MAC)
     list(APPEND GX_SOURCES ${GLL_SOURCES})
 endif()
 
-# Build OpenGL/SDL graphics device on Windows and Linux
-if(WHOA_SYSTEM_WIN OR WHOA_SYSTEM_LINUX)
+# Build OpenGL/SDL graphics device if enabled
+if(WHOA_BUILD_GLSDL)
     file(GLOB GLSDL_SOURCES "glsdl/*.cpp")
     list(APPEND GX_SOURCES ${GLSDL_SOURCES})
 endif()
@@ -53,8 +53,8 @@ if(WHOA_SYSTEM_WIN)
     )
 endif()
 
-# Link SDL3 and GLEW for Windows and Linux
-if (WHOA_SYSTEM_WIN OR WHOA_SYSTEM_LINUX)
+# Link SDL2 and GLEW for GLSDL
+if (WHOA_BUILD_GLSDL)
     target_link_libraries(gx
         PRIVATE
             SDL2::SDL2-static

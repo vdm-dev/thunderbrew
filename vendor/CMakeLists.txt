@@ -2,7 +2,7 @@ add_subdirectory(freetype-2.0.9)
 add_subdirectory(lua-5.1.3)
 add_subdirectory(stormlib-9)
 
-if(WHOA_SYSTEM_WIN OR WHOA_SYSTEM_LINUX)
+if(WHOA_BUILD_GLSDL)
     set(SDL_SHARED OFF)
     set(SDL_STATIC ON)
     add_subdirectory(sdl-2.30.5)
@@ -14,7 +14,7 @@ endif()
 
 # FMOD
 
-if(DEFINED WHOA_BUILD_FMOD)
+if(WHOA_BUILD_FMOD)
     add_library(fmod SHARED IMPORTED GLOBAL)
     # Determine which flavor of FMOD to use:
     # - macOS versions from 10.9 down prefer FMOD Ex
@@ -36,7 +36,7 @@ if(DEFINED WHOA_BUILD_FMOD)
 
     if(WHOA_FMOD_EX)
         set(FMOD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/fmodex-4.24.16")
-    else()
+    else() 
         set(FMOD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/fmodcore-2.02.18")
     endif()
 
