@@ -122,7 +122,7 @@ pub fn build(b: *std.Build) void {
 
   // GLSDL
   const build_glsdl_option = b.option(bool, "WHOA_BUILD_GLSDL", "Enable");
-  switch (target.result.os) {
+  switch (t.os.tag) {
     .windows => {
       // SDL is off by default
       build_glsdl = build_glsdl_option orelse false;

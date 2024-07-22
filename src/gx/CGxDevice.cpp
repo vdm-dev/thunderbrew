@@ -5,6 +5,7 @@
 #include "util/SFile.hpp"
 #include <algorithm>
 #include <cstring>
+#include <cstdio>
 #include <limits>
 #include <new>
 #include <storm/Error.hpp>
@@ -14,7 +15,7 @@
     #include "gx/d3d/CGxDeviceD3d.hpp"
 #endif
 
-#if defined(WHOA_SYSTEM_LINUX) || defined(WHOA_SYSTEM_WIN)
+#if defined(WHOA_BUILD_GLSDL)
     #include "gx/glsdl/CGxDeviceGLSDL.hpp"
 #endif
 

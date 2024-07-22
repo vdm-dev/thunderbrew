@@ -7,37 +7,39 @@ CGxDevice* g_theGxDevicePtr = nullptr;
 CGxDevice* GxDevCreate(EGxApi api, int32_t (*windowProc)(void* window, uint32_t message, uintptr_t wparam, intptr_t lparam), const CGxFormat& format) {
     CGxDevice* device;
 
-    #if defined(WHOA_SYSTEM_WIN)
-        if (api == GxApi_OpenGl) {
-            device = CGxDevice::NewOpenGl();
-        } else if (api == GxApi_D3d9) {
-            device = CGxDevice::NewD3d();
-        } else if (api == GxApi_D3d9Ex) {
-            device = CGxDevice::NewD3d9Ex();
-        } else if (api == GxApi_GLSDL) {
-            device = CGxDevice::NewGLSDL();
-        } else {
-            // Error
-        }
-    #endif
+    switch (api) {
+    case GxApi_OpenGl:
+        device = CGxDevice::NewOpenGl();
 
-    #if defined(WHOA_SYSTEM_MAC)
-        if (api == GxApi_OpenGl) {
-            device = CGxDevice::NewOpenGl();
-        } else if (api == GxApi_GLL) {
-            device = CGxDevice::NewGLL();
-        } else {
-            // Error
-        }
-    #endif
+#if defined(WHOA_SYSTEM_WIN)
+    case GxApi_D3d9:
+        device = CGxDevice::NewD3d();
+        break;
+    case GxApi_D3d9Ex:
+        device = CGxDevice::NewD3d9Ex();
+        break;
+    case GxApi_D3d10:
+    case GxApi_D3d11:
+        // Error
+        break;
+#endif
 
-    #if defined(WHOA_SYSTEM_LINUX)
-        if (api == GxApi_GLSDL) {
-            device = CGxDevice::NewGLSDL();
-        } else {
-            // Error
-        }
-    #endif
+#if defined(WHOA_SYSTEM_MAC)
+    case GxApi_GLL:
+        device = CGxDevice::NewGLL();
+        break;
+#endif
+
+#if defined(WHOA_BUILD_GLSDL)
+    case GxApi_GLSDL:
+        device = CGxDevice::NewGLSDL();
+        break;
+#endif
+
+    default:
+        // Error
+        break;
+    }
 
     g_theGxDevicePtr = device;
 
