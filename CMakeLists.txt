@@ -50,6 +50,9 @@ else()
     # Right now GLSDL is the only rendering device for Linux
     set(WHOA_BUILD_GLSDL 1)
 endif()
+if (WHOA_BUILD_GLSDL)
+    add_definitions(-DWHOA_BUILD_GLSDL)
+endif()
 
 # FMOD
 option(WHOA_BUILD_FMOD "Disable/Enable the use of the FMOD sound API. This introduces a dependency on a proprietary FMOD dynamically linked library." 0)

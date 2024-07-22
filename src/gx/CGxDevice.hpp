@@ -57,7 +57,7 @@ class CGxDevice {
 #if defined(WHOA_SYSTEM_MAC)
         static CGxDevice* NewGLL();
 #endif
-#if defined(WHOA_SYSTEM_LINUX) || defined(WHOA_SYSTEM_WIN)
+#if defined(WHOA_BUILD_GLSDL)
         static CGxDevice* NewGLSDL();
 #endif
         static CGxDevice* NewOpenGl();
