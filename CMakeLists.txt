@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR
         "In-source builds not allowed.
         Please make a new directory (called a build directory) and run CMake from there.
@@ -32,7 +32,7 @@ include(lib/system/cmake/system.cmake)
 
 # UBsan
 set(WHOA_UB_SAN_HELP_TEXT, "Disable/Enable the Undefined Behavior Sanitizer. This is turned on by default in Debug build types. Has no effect when using MSVC.")
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     option(WHOA_UB_SAN WHOA_UB_SAN_HELP_TEXT 1)
 else()
     option(WHOA_UB_SAN WHOA_UB_SAN_HELP_TEXT 0)
@@ -40,7 +40,7 @@ endif()
 unset(WHOA_UB_SAN_HELP_TEXT)
 
 # GLSDL 
-if (WHOA_SYSTEM_WINDOWS)
+if(WHOA_SYSTEM_WINDOWS)
     # GLSDL can be disabled on Windows to save time
     option(WHOA_BUILD_GLSDL "Disable/Enable compilation of the OpenGL/SDL2 graphics rendering device on Windows.", 0)
 elseif(WHOA_SYSTEM_MAC)
