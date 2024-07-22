@@ -50,10 +50,6 @@ fn link_core_dependencies(c: *std.Build.Step.Compile) void {
   c.linkLibrary(d.lua.artifact("lua"));
   // link freetype
   c.linkLibrary(d.freetype.artifact("freetype"));
-  // // link sdl
-  // c.linkLibrary(d.sdl.artifact("SDL3"));
-  // // link glew
-  // c.linkLibrary(d.glew.artifact("glew"));
 }
 
 fn link_glsdl_dependencies(target: std.Build.ResolvedTarget, c: *std.Build.Step.Compile) void {
@@ -75,16 +71,80 @@ pub fn build(b: *std.Build) void {
   const target = b.standardTargetOptions(.{});
   const optimize = b.standardOptimizeOption(.{});
 
+  // Build options
+
+  // UBsan
+  const ub_san_help_text = "Enable/Disable the Undefined Behavior Sanitizer";
+  const ub_san_option = b.option(bool, "WHOA_UB_SAN", ub_san_help_text);
+  var ub_san: bool = undefined;
+
+  // UB san is enabled or disabled by default, depending on what mode we're in
+  switch (optimize) {
+    .Debug => {
+      ub_san = true;
+    },
+    .ReleaseSafe => {
+      ub_san = true;
+    },
+    .ReleaseSmall => {
+      ub_san = false;
+    },
+    .ReleaseFast => {
+      ub_san = false;
+    }
+  }
+  if (ub_san_option != null) {
+    ub_san = ub_san_option.?;
+  }
+  const whoa_base_compiler_flags = [_][]const u8 {
+    "-std=c++11",
+    // Allow templates to abuse offsetof
+    "-Wno-invalid-offsetof",
+  };
+  var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+  var whoa_compiler_flags_list = std.ArrayList([]const u8).init(gpa.allocator());
+  defer _ = whoa_compiler_flags_list.deinit();
+  whoa_compiler_flags_list.appendSlice(&whoa_base_compiler_flags) catch {};
+
   const t = &target.result;
 
-  const whoa_compiler_flags = [_][]const u8 {
-    "-std=c++11",
+  if (ub_san) {
+    // Disable UBsan alignment checks only
+    whoa_compiler_flags_list.append("-fno-sanitize=alignment") catch {};
+  } else {
+    // Disable UBsan
+    whoa_compiler_flags_list.append("-fsanitize=undefined") catch {};
+  }
 
-    "-Wno-invalid-offsetof",
+  var build_gll = false;
+  var build_d3d = false;
+  var build_glsdl = false;
 
-    // Disable UBsan alignment checks
-    "-fno-sanitize=alignment",
-  };
+  // GLSDL
+  const build_glsdl_option = b.option(bool, "WHOA_BUILD_GLSDL", "Enable");
+  switch (target.result.os) {
+    .windows => {
+      // SDL is off by default
+      build_glsdl = build_glsdl_option orelse false;
+      build_d3d = true;
+    },
+
+    .macos => {
+      // macos can't really compile SDL easily
+      build_glsdl = false;
+      build_gll = true;
+    },
+
+    else => {
+      // GLSDL on by default
+      build_glsdl = build_glsdl_option orelse true;
+    }
+  }
+
+  // FMOD
+  // const build_fmod_option = b.option(bool, "WHOA_BUILD_FMOD", "Enable");
+
+  const whoa_compiler_flags = whoa_compiler_flags_list.items;
 
   // dependencies
   get_dependencies(b);
@@ -123,7 +183,7 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_async_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
   // *****************
@@ -150,28 +210,28 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_client_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
   switch (t.os.tag) {
     .windows => {
       whoa_core.addCSourceFiles(.{
         .files = &whoa_client_windows_sources,
-        .flags = &whoa_compiler_flags
+        .flags = whoa_compiler_flags
       });
     },
     
     .macos => {
       whoa_core.addCSourceFiles(.{
         .files = &whoa_client_macos_sources,
-        .flags = &whoa_compiler_flags
+        .flags = whoa_compiler_flags
       });
     },
 
     else => {
       whoa_core.addCSourceFiles(.{
         .files = &whoa_client_linux_sources,
-        .flags = &whoa_compiler_flags
+        .flags = whoa_compiler_flags
       });
     }
   }
@@ -212,7 +272,7 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_console_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
   // *************
@@ -230,7 +290,7 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_db_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
   // ****************
@@ -264,28 +324,28 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_event_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
   switch (t.os.tag) {
     .windows => {
       whoa_core.addCSourceFiles(.{
         .files = &whoa_event_windows_sources,
-        .flags = &whoa_compiler_flags
+        .flags = whoa_compiler_flags
       });
     },
     
     .macos => {
       whoa_core.addCSourceFiles(.{
         .files = &whoa_event_macos_sources,
-        .flags = &whoa_compiler_flags
+        .flags = whoa_compiler_flags
       });
     },
 
     else => {
       whoa_core.addCSourceFiles(.{
         .files = &whoa_event_linux_sources,
-        .flags = &whoa_compiler_flags
+        .flags = whoa_compiler_flags
       });
     }
   }
@@ -301,7 +361,7 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_glue_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
   // *************
@@ -397,51 +457,34 @@ pub fn build(b: *std.Build) void {
     "src/gx/glsdl/GLVertexShader.cpp"
   };
 
-  var use_gll = false;
-  var use_glsdl = false;
-  var use_d3d = false;
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_gx_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
-  switch (t.os.tag) {
-    .windows => {
-      use_d3d = true;
-      use_glsdl = true;
-    },
 
-    .macos => {
-      use_gll = true;
-    },
-
-    else => {
-      use_glsdl = true;
-    }
-  }
-
-  if (use_d3d) {
+  if (build_d3d) {
     whoa_core.addCSourceFiles(.{
       .files = &whoa_gx_d3d_sources,
-      .flags = &whoa_compiler_flags
+      .flags = whoa_compiler_flags
     });
     whoa_core.linkSystemLibrary("d3d9");
   }
 
-  if (use_gll) {
+  if (build_gll) {
     whoa_core.addCSourceFiles(.{
       .files = &whoa_gx_gll_sources,
-      .flags = &whoa_compiler_flags
+      .flags = whoa_compiler_flags
     });
     whoa_core.linkFramework("AppKit");
     whoa_core.linkFramework("OpenGL");
   }
 
-  if (use_glsdl) {
+  if (build_glsdl) {
     whoa_core.addCSourceFiles(.{
       .files = &whoa_gx_glsdl_sources,
-      .flags = &whoa_compiler_flags
+      .flags = whoa_compiler_flags
     });
 
     link_glsdl_dependencies(target, whoa_core);
@@ -455,7 +498,7 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_math_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
   // ****************
@@ -477,7 +520,7 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_model_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
   
   // **************
@@ -514,14 +557,14 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_net_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
   switch (t.os.tag) {
     .windows => {
       whoa_core.addCSourceFiles(.{
         .files = &whoa_net_winsock_sources,
-        .flags = &whoa_compiler_flags
+        .flags = whoa_compiler_flags
       });
       whoa_core.linkSystemLibrary("wsock32");
       whoa_core.linkSystemLibrary("ws2_32");
@@ -530,7 +573,7 @@ pub fn build(b: *std.Build) void {
     else => {
       whoa_core.addCSourceFiles(.{
         .files = &whoa_net_bsd_sources,
-        .flags = &whoa_compiler_flags
+        .flags = whoa_compiler_flags
       });
     }
   }
@@ -562,7 +605,7 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_sound_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
   // *************
@@ -628,7 +671,7 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_ui_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
   // ***************
@@ -649,13 +692,13 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_util_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
   if (t.os.tag == .macos) {
     whoa_core.addCSourceFiles(.{
       .files = &whoa_util_macos_sources,
-      .flags = &whoa_compiler_flags
+      .flags = whoa_compiler_flags
     });
   }
 
@@ -668,7 +711,7 @@ pub fn build(b: *std.Build) void {
 
   whoa_core.addCSourceFiles(.{
     .files = &whoa_world_sources,
-    .flags = &whoa_compiler_flags
+    .flags = whoa_compiler_flags
   });
 
   // **************
@@ -707,21 +750,21 @@ pub fn build(b: *std.Build) void {
     .windows => {
       whoa_app.addCSourceFiles(.{
         .files = &whoa_app_windows_sources,
-        .flags = &whoa_compiler_flags
+        .flags = whoa_compiler_flags
       });
     },
     
     .macos => {
       whoa_app.addCSourceFiles(.{
         .files = &whoa_app_macos_sources,
-        .flags = &whoa_compiler_flags
+        .flags = whoa_compiler_flags
       });
     },
 
     else => {
       whoa_app.addCSourceFiles(.{
         .files = &whoa_app_linux_sources,
-        .flags = &whoa_compiler_flags
+        .flags = whoa_compiler_flags
       });
     }
   }
@@ -729,76 +772,6 @@ pub fn build(b: *std.Build) void {
   link_core_dependencies(whoa_app);
 
   whoa_app.linkLibrary(whoa_core);
-
-  // // link different modules together
-  
-  // // whoa_async.linkLibrary(whoa_event);
-  // // whoa_async.linkLibrary(whoa_util);
-
-  // whoa_client.linkLibrary(whoa_async);
-  // // whoa_client.linkLibrary(whoa_console);
-  // // whoa_client.linkLibrary(whoa_db);
-  // // whoa_client.linkLibrary(whoa_event);
-  // // whoa_client.linkLibrary(whoa_gx);
-  // // whoa_client.linkLibrary(whoa_model);
-  // // whoa_client.linkLibrary(whoa_net);
-  // // whoa_client.linkLibrary(whoa_ui);
-  // // whoa_client.linkLibrary(whoa_util);
-  // // whoa_client.linkLibrary(whoa_world);
-
-  // whoa_console.linkLibrary(whoa_client);
-  // whoa_console.linkLibrary(whoa_gx);
-
-  // // whoa_event.linkLibrary(whoa_client);
-  // // whoa_event.linkLibrary(whoa_gx);
-
-  // whoa_glue.linkLibrary(whoa_client);
-  // whoa_glue.linkLibrary(whoa_console);
-  // whoa_glue.linkLibrary(whoa_db);
-  // whoa_glue.linkLibrary(whoa_event);
-  // whoa_glue.linkLibrary(whoa_gx);
-  // whoa_glue.linkLibrary(whoa_model);
-  // whoa_glue.linkLibrary(whoa_net);
-  // whoa_glue.linkLibrary(whoa_sound);
-  // whoa_glue.linkLibrary(whoa_ui);
-  // whoa_glue.linkLibrary(whoa_util);
-
-  // // whoa_gx.linkLibrary(whoa_event);
-  // whoa_gx.linkLibrary(whoa_math);
-  // whoa_gx.linkLibrary(whoa_model);
-  // whoa_gx.linkLibrary(whoa_ui);
-  // whoa_gx.linkLibrary(whoa_util);
-
-  // whoa_model.linkLibrary(whoa_async);
-  // // whoa_model.linkLibrary(whoa_gx);
-  // whoa_model.linkLibrary(whoa_math);
-  // whoa_model.linkLibrary(whoa_util);
-
-  // whoa_net.linkLibrary(whoa_client);
-  // whoa_net.linkLibrary(whoa_event);
-
-  // whoa_sound.linkLibrary(whoa_ui);
-  // whoa_sound.linkLibrary(whoa_util);
-
-  // whoa_ui.linkLibrary(whoa_client);
-  // whoa_ui.linkLibrary(whoa_console);
-  // whoa_ui.linkLibrary(whoa_db);
-  // whoa_ui.linkLibrary(whoa_event);
-  // whoa_ui.linkLibrary(whoa_glue);
-  // // whoa_ui.linkLibrary(whoa_gx);
-  // whoa_ui.linkLibrary(whoa_math);
-  // whoa_ui.linkLibrary(whoa_model);
-  // whoa_ui.linkLibrary(whoa_net);
-  // whoa_ui.linkLibrary(whoa_util);
-
-  // whoa_world.linkLibrary(whoa_gx);
-  // whoa_world.linkLibrary(whoa_model);
-
-  // whoa_app.linkLibrary(whoa_client);
-  // // whoa_app.linkLibrary(whoa_event);
-  // // whoa_app.linkLibrary(whoa_gx);
-  // // whoa_app.linkLibrary(whoa_net);
-  // // whoa_app.linkLibrary(whoa_util);
 
   b.installArtifact(whoa_app);
 }
