@@ -40,8 +40,10 @@ jobs:
         with:
           submodules: recursive
       - name: Install dependencies (Ubuntu)
-        run: sudo apt install -y libopengl-dev libglx-dev libxext-dev libglvnd-dev
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Windows'
+        run: |
+          sudo apt update
+          sudo apt install -y libopengl-dev libglx-dev libxext-dev libglvnd-dev
 
       - name: Prepare
         run: mkdir build
