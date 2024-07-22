@@ -1,5 +1,5 @@
 if(WHOA_SYSTEM_WIN)
-    file(GLOB PRIVATE_SOURCES "win/*.cpp")
+    file(GLOB PRIVATE_SOURCES "win/*.cpp" "win/Whoa.rc")
 
     add_executable(Whoa WIN32 ${PRIVATE_SOURCES})
 

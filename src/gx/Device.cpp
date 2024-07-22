@@ -1,15 +1,17 @@
 #include "gx/Device.hpp"
 #include "gx/CGxDevice.hpp"
 #include "gx/Gx.hpp"
+#include <cstdio>
 
 CGxDevice* g_theGxDevicePtr = nullptr;
 
 CGxDevice* GxDevCreate(EGxApi api, int32_t (*windowProc)(void* window, uint32_t message, uintptr_t wparam, intptr_t lparam), const CGxFormat& format) {
-    CGxDevice* device;
+    CGxDevice* device = nullptr;
 
     switch (api) {
     case GxApi_OpenGl:
         device = CGxDevice::NewOpenGl();
+        break;
 
 #if defined(WHOA_SYSTEM_WIN)
     case GxApi_D3d9:
@@ -40,6 +42,8 @@ CGxDevice* GxDevCreate(EGxApi api, int32_t (*windowProc)(void* window, uint32_t 
         // Error
         break;
     }
+
+    STORM_ASSERT(device != nullptr);
 
     g_theGxDevicePtr = device;
 

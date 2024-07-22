@@ -6,6 +6,7 @@
 #include "event/Input.hpp"
 #include "gx/Device.hpp"
 #include <cstring>
+#include <cstdio>
 
 CVar* s_cvGxMaximize;
 CVar* s_cvGxResolution;
@@ -296,6 +297,9 @@ void ConsoleDeviceInitialize(const char* title) {
             break;
         }
     }
+
+    // Log
+    printf("GxApi_%s selected\n", g_gxApiNames[api]);
 
     // Set internally (CVar value reflects the current gxApi at launch),
     // this will not Set() as CVar gxApi is latched

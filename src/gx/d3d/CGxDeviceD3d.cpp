@@ -333,7 +333,18 @@ LRESULT CGxDeviceD3d::WindowProcD3d(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
     }
 
     case WM_SETCURSOR: {
-        // TODO
+        if (device) {
+            if (device->m_d3dDevice && lParam == 1) {
+                SetCursor(nullptr);
+                BOOL show = TRUE;
+                // if (device->unk2904[0x13] == 0) || (device->.unk2904[0x14] == 0)) {
+                //     show = FALSE;
+                // } else {
+                //     show = TRUE;
+                // }
+                device->m_d3dDevice->ShowCursor(show);
+            }
+        }
 
         return 1;
     }
