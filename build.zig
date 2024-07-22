@@ -489,6 +489,8 @@ pub fn build(b: *std.Build) void {
       .flags = whoa_compiler_flags
     });
 
+    whoa_core.defineCMacro("WHOA_BUILD_GLSDL", "1");
+
     link_glsdl_dependencies(target, whoa_core);
   }
 
@@ -733,6 +735,7 @@ pub fn build(b: *std.Build) void {
 
   const whoa_app_windows_sources = [_][]const u8 {
     "src/app/win/Whoa.cpp",
+    "src/app/win/Whoa.rc"
   };
 
   const whoa_app_macos_sources = [_][]const u8 {
