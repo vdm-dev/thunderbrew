@@ -198,8 +198,8 @@ void GLSDLWindow::Create(const char* title, const GLSDLWindowRect& rect, GLTextu
 
     this->m_sdlWindow = SDL_CreateWindow(
         title,
-        0,
-        0,
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
         static_cast<int>(rect.size.width), static_cast<int>(rect.size.height),
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
     );
