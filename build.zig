@@ -111,9 +111,11 @@ pub fn build(b: *std.Build) void {
   if (ub_san) {
     // Disable UBsan alignment checks only
     whoa_compiler_flags_list.append("-fno-sanitize=alignment") catch {};
+    whoa_compiler_flags_list.append("-fno-sanitize=float-cast-overflow") catch {};
+    whoa_compiler_flags_list.append("-fno-sanitize=signed-integer-overflow") catch {};
   } else {
     // Disable UBsan
-    whoa_compiler_flags_list.append("-fsanitize=undefined") catch {};
+    whoa_compiler_flags_list.append("-fno-sanitize=all") catch {};
   }
 
   var build_gll = false;

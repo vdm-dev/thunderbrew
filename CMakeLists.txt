@@ -52,7 +52,7 @@ else()
 endif()
 if (WHOA_BUILD_GLSDL)
     add_definitions(-DWHOA_BUILD_GLSDL)
-endif()
+endif() 
 
 # FMOD
 option(WHOA_BUILD_FMOD "Disable/Enable the use of the FMOD sound API. This introduces a dependency on a proprietary FMOD dynamically linked library." 0)
@@ -67,6 +67,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
         # Allow strange alignments
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize=alignment")
+        # Make encountering UB an unrecoverable error
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize-recover=all")
     else()
         # Disable UBsan completely
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize=undefined")
