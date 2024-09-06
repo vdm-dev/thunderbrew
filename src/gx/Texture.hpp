@@ -5,6 +5,12 @@
 #include "gx/texture/CGxTex.hpp"
 #include "gx/texture/CTexture.hpp"
 
+enum EImageFormat {
+    IMAGE_FORMAT_TGA = 0x0,
+    IMAGE_FORMAT_BLP = 0x1,
+    NUM_IMAGE_FORMATS = 0x2
+};
+
 typedef HOBJECT HTEXTURE;
 
 typedef void (TEXTURE_CALLBACK)(EGxTexCommand, uint32_t, uint32_t, uint32_t, uint32_t, void*, uint32_t&, const void*&);
@@ -27,6 +33,8 @@ int32_t GxTexCreate(CGxTexParms const&, CGxTex*&);
 
 int32_t GxTexCreate(EGxTexTarget, uint32_t, uint32_t, uint32_t, EGxTexFormat, EGxTexFormat, CGxTexFlags, void*, void (*)(EGxTexCommand, uint32_t, uint32_t, uint32_t, uint32_t, void*, uint32_t&, const void*&), const char*, CGxTex*&);
 
+int32_t GxTexCreate(uint32_t, uint32_t, EGxTexFormat, CGxTexFlags, void*, void (*)(EGxTexCommand, uint32_t, uint32_t, uint32_t, uint32_t, void*, uint32_t&, const void*&), CGxTex*&);
+
 void GxTexDestroy(CGxTex* texId);
 
 void GxTexParameters(const CGxTex* texId, CGxTexParms& parms);
@@ -44,6 +52,8 @@ TEXTURE_CALLBACK GxuUpdateSingleColorTexture;
 MipBits* MippedImgAllocA(uint32_t, uint32_t, uint32_t, const char*, int32_t);
 
 uint32_t MippedImgCalcSize(uint32_t, uint32_t, uint32_t);
+
+void MippedImgSet(uint32_t fourCC, uint32_t width, uint32_t height, MipBits* bits);
 
 CGxTex* TextureAllocGxTex(EGxTexTarget, uint32_t, uint32_t, uint32_t, EGxTexFormat, CGxTexFlags, void*, void (*userFunc)(EGxTexCommand, uint32_t, uint32_t, uint32_t, uint32_t, void*, uint32_t&, const void*&), EGxTexFormat);
 
@@ -71,7 +81,11 @@ void TextureInitialize(void);
 
 int32_t TextureIsSame(HTEXTURE textureHandle, const char* fileName);
 
+MipBits* TextureLoadImage(const char* filename, uint32_t* width, uint32_t* height, PIXEL_FORMAT* dataFormat, int32_t* isOpaque, CStatus* status, uint32_t* alphaBits, int32_t a8);
+
 void TextureFreeGxTex(CGxTex* texId);
+
+void TextureFreeMippedImg(MipBits* image, PIXEL_FORMAT format, uint32_t width, uint32_t height);
 
 CGxTex* TextureGetGxTex(CTexture*, int32_t, CStatus*);
 

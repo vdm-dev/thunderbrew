@@ -8,16 +8,16 @@
 class CGxTexFlags {
     public:
         // Member variables
-        uint32_t m_filter : 3;
-        uint32_t m_wrapU : 1;
-        uint32_t m_wrapV : 1;
-        uint32_t m_forceMipTracking : 1;
-        uint32_t m_generateMipMaps : 1;
-        uint32_t m_renderTarget : 1;
-        uint32_t m_maxAnisotropy : 5;
-        uint32_t m_bit13 : 1;
-        uint32_t m_bit14 : 1;
-        uint32_t m_bit15 : 1;
+            uint32_t m_filter : 3;
+            uint32_t m_wrapU : 1;
+            uint32_t m_wrapV : 1;
+            uint32_t m_forceMipTracking : 1;
+            uint32_t m_generateMipMaps : 1;
+            uint32_t m_renderTarget : 1;
+            uint32_t m_maxAnisotropy : 5;
+            uint32_t m_bit13 : 1;
+            uint32_t m_bit14 : 1;
+            uint32_t m_bit15 : 1;
 
         // Member functions
         CGxTexFlags()

@@ -2,6 +2,7 @@
 #include "gx/Device.hpp"
 #include "gx/Gx.hpp"
 #include "gx/texture/CBLPFile.hpp"
+#include "gx/texture/CTgaFile.hpp"
 #include "util/Filesystem.hpp"
 #include "util/SFile.hpp"
 #include <algorithm>
@@ -272,6 +273,22 @@ int32_t GxTexCreate(EGxTexTarget target, uint32_t width, uint32_t height, uint32
     );
 }
 
+int32_t GxTexCreate(uint32_t width, uint32_t height, EGxTexFormat format, CGxTexFlags flags, void* userArg, void (*userFunc)(EGxTexCommand, uint32_t, uint32_t, uint32_t, uint32_t, void*, uint32_t&, const void*&), CGxTex*& texId) {
+    return GxTexCreate(
+        GxTex_2d,
+        width,
+        height,
+        0,
+        format,
+        format,
+        flags,
+        userArg,
+        userFunc,
+        "Unknown",
+        texId
+    );
+}
+
 void GxTexDestroy(CGxTex* texId) {
     g_theGxDevicePtr->TexDestroy(texId);
 }
@@ -349,6 +366,14 @@ CGxTex* TextureAllocGxTex(EGxTexTarget target, uint32_t width, uint32_t height, 
     // TODO
 
     return nullptr;
+}
+
+MipBits* TextureAllocMippedImg(PIXEL_FORMAT format, uint32_t width, uint32_t height) {
+    // TODO: optimizations
+    // MipBits cache
+    // Free list
+
+    return MippedImgAllocA(format, width, height, __FILE__, __LINE__);
 }
 
 void GxTexUpdate(CGxTex* texId, int32_t minX, int32_t minY, int32_t maxX, int32_t maxY, int32_t immediate) {
@@ -502,6 +527,19 @@ uint32_t MippedImgCalcSize(uint32_t fourCC, uint32_t width, uint32_t height) {
     uint32_t imgSize = levelDataSize + (sizeof(void*) * levelCount);
 
     return imgSize;
+}
+
+void MippedImgSet(uint32_t fourCC, uint32_t width, uint32_t height, MipBits* bits) {
+    uint32_t levelDataSize;
+    uint32_t offset = 0;
+
+    auto levelCount = CalcLevelCount(width, height);
+
+    for (int32_t level = 0; level < levelCount; level++) {
+        bits->mip[level] = reinterpret_cast<C4Pixel*>(reinterpret_cast<uintptr_t>(bits->mip[levelCount]) + offset);
+        levelDataSize = CalcLevelSize(level, width, height, fourCC);
+        offset += levelDataSize;
+    }
 }
 
 // TODO
@@ -1089,4 +1127,390 @@ int32_t TextureIsSame(HTEXTURE textureHandle, const char* fileName) {
     STORM_ASSERT(textureHandle);
 
     return SStrCmpI(buf, TextureGetTexturePtr(textureHandle)->filename, sizeof(buf)) == 0;
+}
+
+int32_t TextureCalcMipCount(uint32_t width, uint32_t height) {
+    int32_t mips = 1;
+
+    while (width > 1 || height > 1) {
+        mips++;
+
+        width >>= 1;
+        if (!width) {
+            width = 1;
+        }
+
+        height >>= 1;
+        if (!height) {
+            height = 1;
+        }
+    }
+
+    return mips;
+}
+
+static void RemoveExtension(char* path) {
+    auto dot = SStrChrR(path, '.');
+    if (dot) {
+        *dot = '\0';
+    }
+}
+
+static void GenerateMipMask(const char* mipZeroName, char* mipMask) {
+    SStrCopy(mipMask, mipZeroName, STORM_MAX_PATH);
+    RemoveExtension(mipMask);
+    SStrPack(mipMask, "_mip%d.tga", STORM_MAX_PATH);
+}
+
+static uint32_t LoadPredrawnMips(const CTgaFile& mipZero, const char* filemask, int32_t a3, MipBits* buffer) {
+    STORM_ASSERT(filemask);
+    STORM_ASSERT(buffer);
+
+    char pathName[STORM_MAX_PATH];
+
+    auto mipZeroWidth = mipZero.Width();
+    auto mipZeroHeight = mipZero.Height();
+
+    uint32_t index = 1;
+
+    auto levels = TextureCalcMipCount(mipZeroWidth, mipZeroHeight);
+    STORM_ASSERT(levels);
+
+    levels--;
+
+    auto width = mipZeroWidth >> 1;
+    auto height = mipZeroHeight >> 1;
+
+    if (levels) {
+        auto v23 = a3 != 0;
+        while (1) {
+            levels--;
+            SStrPrintf(pathName, STORM_MAX_PATH, filemask, index);
+            if (!SFile::FileExistsEx(pathName, v23)) {
+                break;
+            }
+
+            CTgaFile mipTga;
+
+            if (!mipTga.Open(pathName, a3) || width != mipTga.Width() || height != mipTga.Height()) {
+                mipTga.Close();
+                return index;
+            }
+
+            if (!mipTga.LoadImageData(2)) {
+                mipTga.Close();
+                return index;
+            }
+
+            if (mipTga.AlphaBits() == 0) {
+                mipTga.AddAlphaChannel(nullptr);
+            }
+
+            mipTga.SetTopDown(1);
+
+            auto mipTgaPixel = mipTga.ImageTGA32Pixel();
+
+            // TODO: suppress UBsan warnings
+            auto bufferPixel = buffer->mip[index];
+
+            index++;
+
+            for (auto i = width * height; i != 0; i--) {
+                bufferPixel->a = mipTgaPixel->a;
+                bufferPixel->r = mipTgaPixel->r;
+                bufferPixel->g = mipTgaPixel->g;
+                bufferPixel->b = mipTgaPixel->b;
+
+                bufferPixel++;
+                mipTgaPixel++;
+            }
+
+            if (width > 1) {
+                width >>= 1;
+            }
+
+            if (height > 1) {
+                height >>= 1;
+            }
+
+            mipTga.Close();
+
+            if (levels == 0) {
+                return index;
+            }
+
+        }
+    }
+
+    return index;
+}
+
+void FullShrink(C4Pixel* dest, uint32_t destWidth, uint32_t destHeight, C4Pixel* source, uint32_t sourceWidth, uint32_t sourceHeight) {
+    auto xScale = sourceWidth / destWidth;
+    auto yScale = sourceHeight / destHeight;
+
+    C4LargePixel unweighted;
+    C4LargePixel weighted;
+    C4Pixel result;
+
+    STORM_ASSERT(destWidth * xScale == sourceWidth);
+    STORM_ASSERT(destHeight * yScale == sourceHeight);
+
+    for (auto y = destHeight; y != 0; y--) {
+        for (auto x = destWidth; x != 0; x--) {
+            memset(&weighted, 0, sizeof(weighted));
+            memset(&unweighted, 0, sizeof(unweighted));
+
+            auto currSource = source;
+
+            for (uint32_t i = yScale; i != 0; i--) {
+                auto pixel = currSource;
+
+                for (uint32_t j = xScale; j != 0; j--) {
+                    weighted.a += pixel->a;
+                    weighted.r += pixel->r * pixel->a;
+                    weighted.g += pixel->g * pixel->a;
+                    weighted.b += pixel->b * pixel->a;
+
+                    unweighted.a++;
+                    unweighted.r += pixel->r;
+                    unweighted.g += pixel->g;
+                    unweighted.b += pixel->b;
+
+                    pixel++;
+                }
+
+                currSource += sourceWidth;
+            }
+
+            if (weighted.a) {
+                STORM_ASSERT(xScale * yScale);
+
+                result.r = weighted.r / weighted.a;
+                result.g = weighted.g / weighted.a;
+                result.b = weighted.b / weighted.a;
+                result.a = weighted.a / (xScale * yScale);
+            } else {
+                result.r = unweighted.r / unweighted.a;
+                result.g = unweighted.g / unweighted.a;
+                result.b = unweighted.b / unweighted.a;
+                result.a = 0;
+            }
+
+            *dest++ = result;
+            source += xScale;
+        }
+
+        source += (yScale - 1) * sourceWidth;
+    }
+}
+
+void TextureGenerateMips(uint32_t width, uint32_t height, uint32_t levelsProvided, uint32_t levelsDesired, MipBits* levelBits) {
+    uint32_t last_good_level = 0;
+
+    auto mipHeight = height;
+    auto mipWidth = width;
+
+    if (levelsDesired > 1) {
+        for (uint32_t i = 0; i < levelsDesired; i++) {
+            mipWidth = mipWidth >>= 1 != 0 ? mipWidth : 1;
+            mipHeight = mipHeight >>= 1 != 0 ? mipHeight : 1;
+
+            if (i >= levelsProvided) {
+                FullShrink(levelBits->mip[i], mipWidth, mipHeight, levelBits->mip[last_good_level], width, height);
+            }
+        }
+    }
+}
+
+int32_t LoadTgaMips(char* ext, const char* filename, int32_t a3, MipBits*& mipBits, uint32_t* width, uint32_t* height, EGxTexFormat* texFormat, int32_t* isOpaque, uint32_t* alphaBits, PIXEL_FORMAT* dataFormat) {
+    STORM_ASSERT(filename);
+
+    if (ext) {
+        ext[0] = '.';
+        ext[1] = 't';
+        ext[2] = 'g';
+        ext[3] = 'a';
+        ext[4] = '\0';
+    }
+
+    CTgaFile texFile;
+
+    if (!texFile.Open(filename, a3)) {
+        texFile.Close();
+        return 0;
+    }
+
+    if (isOpaque) {
+        *isOpaque = texFile.AlphaBits() == 0;
+    }
+
+    if (!texFile.LoadImageData(3)) {
+        texFile.Close();
+        return 0;
+    }
+
+    texFile.SetTopDown(1);
+
+    auto mipCount = TextureCalcMipCount(texFile.Width(), texFile.Height());
+
+    if (mipBits) {
+        MippedImgSet(2, texFile.Width(), texFile.Height(), mipBits);
+    } else {
+        mipBits = TextureAllocMippedImg(PIXEL_ARGB8888, texFile.Width(), texFile.Height());
+    }
+
+    auto size = texFile.Size();
+
+    if (size) {
+        auto tga32Pixels = texFile.ImageTGA32Pixel();
+        auto mipPixels = mipBits->mip[0];
+
+        for (int32_t i = 0; i < size; i++) {
+            auto& mipPixel = mipPixels[i];
+            auto& tga32Pixel = tga32Pixels[i];
+
+            mipPixel.b = tga32Pixel.b;
+            mipPixel.g = tga32Pixel.g;
+            mipPixel.r = tga32Pixel.r;
+            mipPixel.a = tga32Pixel.a;
+        }
+    }
+
+    texFile.Close();
+
+    char mipFileMask[STORM_MAX_PATH];
+
+    GenerateMipMask(filename, mipFileMask);
+
+    auto predrawnLevels = LoadPredrawnMips(texFile, mipFileMask, a3, mipBits);
+
+    TextureGenerateMips(texFile.Width(), texFile.Height(), predrawnLevels, mipCount, mipBits);
+
+    if (width) {
+        *width = texFile.Width();
+    }
+
+    if (height) {
+        *height = texFile.Height();
+    }
+
+    if (texFormat) {
+        *texFormat = GxTex_Argb8888;
+    }
+
+    if (alphaBits) {
+        *alphaBits = texFile.AlphaBits();
+    }
+
+    if (dataFormat) {
+        *dataFormat = PIXEL_ARGB8888;
+    }
+
+    return 1;
+}
+
+int32_t LoadBlpMips(char* ext, const char* filename, int32_t a3, MipBits*& mipBits, uint32_t* width, uint32_t* height, int32_t* isOpaque, PIXEL_FORMAT* dataFormat) {
+    STORM_ASSERT(filename);
+
+    if (ext) {
+        ext[0] = '.';
+        ext[1] = 'b';
+        ext[2] = 'l';
+        ext[3] = 'p';
+        ext[4] = '\0';
+    }
+
+    uint32_t bestMip;
+
+    CBLPFile texFile;
+
+    if (!texFile.Open(filename, a3)) {
+        texFile.Close();
+        return 0;
+    }
+
+    auto imgWidth = texFile.Width();
+    auto imgHeight = texFile.Height();
+
+    PIXEL_FORMAT format;
+    if (!dataFormat || (format = *dataFormat, format == PIXEL_UNSPECIFIED)) {
+        if (texFile.AlphaBits()) {
+            format = texFile.AlphaBits() == 1 ? PIXEL_ARGB1555 : PIXEL_ARGB4444;
+        } else {
+            format = PIXEL_RGB565;
+        }
+    }
+
+    auto image = TextureAllocMippedImg(format, imgWidth, imgHeight);
+
+    if (!texFile.LockChain2(filename, format, mipBits, 0, 0)) {
+        texFile.Close();
+        return 0;
+    }
+
+    if (width) {
+        *width = imgWidth;
+    }
+
+    if (height) {
+        *height = imgHeight;
+    }
+
+    if (isOpaque) {
+        *isOpaque = texFile.AlphaBits() == 0;
+    }
+
+    if (dataFormat) {
+        *dataFormat = format;
+    }
+
+    texFile.Close();
+
+    return 1;
+}
+
+MipBits* TextureLoadImage(const char* filename, uint32_t* width, uint32_t* height, PIXEL_FORMAT* dataFormat, int32_t* isOpaque, CStatus* status, uint32_t* alphaBits, int32_t a8) {
+    STORM_ASSERT(filename);
+    STORM_ASSERT(width);
+    STORM_ASSERT(height);
+
+    // OsOutputDebugString("TextureLoadImage() blocking load: %s.\n", filename)
+
+    char loadFileName[STORM_MAX_PATH];
+
+    SStrCopy(loadFileName, filename, STORM_MAX_PATH);
+
+    auto ext = OsPathFindExtensionWithDot(loadFileName);
+
+    *ext = '\0';
+
+    uint32_t imageFormat = IMAGE_FORMAT_BLP;
+    MipBits* mipImages = nullptr;
+
+    for (uint32_t i = 0; i < NUM_IMAGE_FORMATS; i++) {
+        if (imageFormat == IMAGE_FORMAT_TGA) {
+            LoadTgaMips(ext, loadFileName, a8, mipImages, width, height, nullptr, isOpaque, alphaBits, dataFormat);
+        } else if (imageFormat == IMAGE_FORMAT_BLP) {
+            LoadBlpMips(ext, loadFileName, a8, mipImages, width, height, isOpaque, dataFormat);
+        }
+
+        imageFormat++;
+        imageFormat %= 2;
+
+        if (mipImages) {
+            return mipImages;
+        }
+    }
+
+    status->Add(STATUS_FATAL, "Error loading texure file \"%s\": unsupported image format\n", filename);
+    return nullptr;
+}
+
+void TextureFreeMippedImg(MipBits* image, PIXEL_FORMAT format, uint32_t width, uint32_t height) {
+    // TODO: mip bits cache free list
+
+    if (image) {
+        SMemFree(image, __FILE__, __LINE__, 0x0);
+    }
 }
