@@ -23,7 +23,7 @@ class SI2 {
         static size_t s_NumScriptFunctions;
         static uint32_t sm_logFlags;
         static HSLOG sm_log;
-#if defined(WHOA_BUILD_SOUND_FMOD)
+#if defined(WHOA_BUILD_FMOD)
         static FMOD::System* sm_pGameSystem;
         static FMOD::System* sm_pChatSystem;
 #endif
