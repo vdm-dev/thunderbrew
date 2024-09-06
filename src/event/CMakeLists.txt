@@ -1,6 +1,6 @@
 file(GLOB PRIVATE_SOURCES "*.cpp")
 
-if(WHOA_SYSTEM_WIN)
+if (WHOA_SYSTEM_WIN)
     file(GLOB WIN_SOURCES
         "win/*.cpp"
     )
@@ -15,7 +15,7 @@ if(WHOA_SYSTEM_MAC)
     list(APPEND PRIVATE_SOURCES ${MAC_SOURCES})
 endif()
 
-if(WHOA_SYSTEM_LINUX)
+if (WHOA_SYSTEM_LINUX)
     file(GLOB LINUX_SOURCES
         "linux/*.cpp"
     )
@@ -23,7 +23,7 @@ if(WHOA_SYSTEM_LINUX)
 endif()
 
 # SDL has its own input event processing
-if(WHOA_BUILD_GLSDL)
+if (WHOA_BUILD_GLSDL)
     file(GLOB SDL_SOURCES "sdl/*.cpp")
     list(APPEND PRIVATE_SOURCES ${SDL_SOURCES})
 endif()
@@ -46,3 +46,9 @@ target_link_libraries(event
         storm
         tempest
 )
+
+if (WHOA_BUILD_GLSDL)
+    target_link_libraries(event
+        PRIVATE
+            SDL2::SDL2-static)
+endif()
