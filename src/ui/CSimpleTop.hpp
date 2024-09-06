@@ -74,6 +74,7 @@ class CSimpleTop : public CLayoutFrame {
         int32_t RaiseFrame(CSimpleFrame* frame, int32_t checkOcclusion);
         void RegisterForEvent(CSimpleFrame* frame, CSimpleEventType event, int32_t a4, uint32_t priority);
         void RegisterFrame(CSimpleFrame* frame);
+        void SetCursor(MipBits* cursorImage);
         void ShowFrame(CSimpleFrame* frame, int32_t a3);
         int32_t StartMoveOrResizeFrame(const CMouseEvent& start, MOVERESIZE_REASON reason, int32_t resize);
         int32_t StartMoveOrResizeFrame(CSimpleFrame* frame, MOVERESIZE_REASON reason, float startx, float starty, int32_t a6);

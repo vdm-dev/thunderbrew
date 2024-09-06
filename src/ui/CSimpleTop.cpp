@@ -8,6 +8,7 @@
 #include "ui/CSimpleRender.hpp"
 #include "ui/CSimpleTexture.hpp"
 #include "ui/CSimpleTitleRegion.hpp"
+#include "cursor/Cursor.hpp"
 #include <cstring>
 #include <tempest/Math.hpp>
 
@@ -513,6 +514,15 @@ void CSimpleTop::RegisterForEvent(CSimpleFrame* frame, CSimpleEventType event, i
 
 void CSimpleTop::RegisterFrame(CSimpleFrame* frame) {
     this->m_frames.LinkToTail(frame);
+}
+
+void CSimpleTop::SetCursor(MipBits* image) {
+    if (image) {
+        auto cursor = g_theGxDevicePtr->CursorLock();
+        memcpy(cursor, image->mip[0], CURSOR_IMAGE_BYTES);
+        g_theGxDevicePtr->CursorUnlock(0, 0);
+        g_theGxDevicePtr->CursorSetVisible(1);
+    }
 }
 
 void CSimpleTop::ShowFrame(CSimpleFrame* frame, int32_t a3) {
