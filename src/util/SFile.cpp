@@ -59,6 +59,22 @@ uint32_t SFile::GetFileSize(SFile* file, uint32_t* filesizeHigh) {
     return low;
 }
 
+// TODO: Proper implementation
+int32_t SFile::FileExists(const char* filename) {
+    return SFile::FileExistsEx(filename, 0);
+}
+
+// TODO: Proper implementation
+int32_t SFile::FileExistsEx(const char* filename, uint32_t a2) {
+    SFile* test_file;
+    if (!SFile::Open(filename, &test_file)) {
+        return 0;
+    }
+
+    SFile::Close(test_file);
+    return 1;
+}
+
 int32_t SFile::IsStreamingMode() {
     // TODO
     return 0;
@@ -155,6 +171,39 @@ int32_t SFile::OpenEx(SArchive* archive, const char* filename, uint32_t flags, S
     (*file)->m_type   = filetype;
 
     return 1;
+}
+
+uint32_t SFile::SetFilePointer(SFile* file, int32_t distancetomove, int32_t* distancetomovehigh, uint32_t movemethod) {
+    switch (file->m_type) {
+    case SFILE_PLAIN: {
+        auto stream = reinterpret_cast<Blizzard::File::StreamRecord*>(file->m_handle);
+        int32_t whence = movemethod;
+        if (whence != 0 && whence != 1) {
+            if (whence >= 2) {
+                whence = movemethod != 2 ? -1 : 2;
+            }
+        }
+        int64_t offset = distancetomove;
+        if (distancetomovehigh) {
+            offset |= *distancetomovehigh << 32;
+        }
+        int64_t pos;
+        Blizzard::File::SetPos(stream, offset, whence);
+        if (Blizzard::File::GetPos(stream, pos)) {
+            if (distancetomovehigh) {
+                *distancetomovehigh = (pos >> 32) & 0xFFFFFFFF;
+            }
+            return pos & 0xFFFFFFFF;
+        }
+
+        return 0xFFFFFFFF;
+    }
+    case SFILE_PAQ: {
+        return static_cast<uint32_t>(SFileSetFilePointer(file->m_handle, static_cast<LONG>(distancetomove), reinterpret_cast<LONG*>(distancetomovehigh), static_cast<DWORD>(movemethod)));
+    }
+    default:
+        STORM_ASSERT(0);
+    }
 }
 
 // TODO Proper implementation
