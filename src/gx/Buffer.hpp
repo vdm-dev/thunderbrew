@@ -25,6 +25,8 @@ namespace Buffer {
 
 uint32_t GxVertexAttribOffset(EGxVertexBufferFormat, EGxVertexAttrib);
 
+CGxBuf* GxBufStream(EGxPoolTarget target, uint32_t itemSize, uint32_t itemCount);
+
 CGxBuf* GxBufCreate(CGxPool*, uint32_t, uint32_t, uint32_t);
 
 void GxBufData(CGxBuf* buf, const void* data, uint32_t size, uint32_t offset);

@@ -2,10 +2,16 @@
 #include "gx/Gx.hpp"
 #include "gx/Shader.hpp"
 #include "gx/texture/CGxTex.hpp"
+#include "gx/Texture.hpp"
+#include "gx/RenderState.hpp"
+#include "gx/Transform.hpp"
+#include "gx/Draw.hpp"
 #include "util/SFile.hpp"
+#include "event/Input.hpp"
 #include <algorithm>
 #include <cstring>
 #include <cstdio>
+#include <cmath>
 #include <limits>
 #include <new>
 #include <storm/Error.hpp>
@@ -97,6 +103,9 @@ uint32_t CGxDevice::s_texFormatBytesPerBlock[] = {
     4       // GxTex_D24X8
 };
 
+CGxShader* CGxDevice::s_uiVertexShader = nullptr;
+CGxShader* CGxDevice::s_uiPixelShader = nullptr;
+
 void CGxDevice::Log(const char* format, ...) {
     // TODO
 }
@@ -142,6 +151,16 @@ uint32_t CGxDevice::PrimCalcCount(EGxPrim primType, uint32_t count) {
     }
 
     return count - CGxDevice::s_primVtxAdjust[primType];
+}
+
+void CGxDevice::ICursorUpdate(EGxTexCommand command, uint32_t width, uint32_t height, uint32_t face, uint32_t level, void* userArg, uint32_t& texelStrideInBytes, const void*& texels) {
+    // TODO
+    if (command == GxTex_Latch) {
+        auto device = static_cast<CGxDevice*>(userArg);
+
+        texelStrideInBytes = 0x80;
+        texels = device->m_cursor;
+    }
 }
 
 CGxDevice::CGxDevice() {
@@ -264,7 +283,201 @@ const CRect& CGxDevice::DeviceDefWindow() {
 }
 
 void CGxDevice::ICursorCreate(const CGxFormat& format) {
-    // TODO
+    int32_t hardwareCursor = format.hwCursor && this->m_caps.m_hardwareCursor;
+
+    this->m_hardwareCursor = hardwareCursor;
+
+    // If hardware cursor is disabled, and there is no cursor texture yet, create one
+    if (!hardwareCursor && this->m_cursorTexture == nullptr) {
+        // default flags?
+        CGxTexFlags cursorTextureFlags;
+
+        // Create a 32x32 cursor texture
+        GxTexCreate(
+            32,
+            32,
+            GxTex_Argb8888,
+            cursorTextureFlags,
+            reinterpret_cast<void*>(this),
+            CGxDevice::ICursorUpdate,
+            this->m_cursorTexture
+        );
+    }
+}
+
+void CGxDevice::ICursorDestroy() {
+    if (this->m_cursorTexture) {
+        GxTexDestroy(this->m_cursorTexture);
+        this->m_cursorTexture = nullptr;
+    }
+}
+
+void CGxDevice::ICursorDraw() {
+    if (!this->m_cursorVisible) {
+        return;
+    }
+
+    if (this->m_hardwareCursor) {
+        return;
+    }
+
+    int32_t mouseX;
+    int32_t mouseY;
+    OsInputGetMousePosition(&mouseX, &mouseY);
+
+    if (mouseX <= -1 || mouseY <= -1 || mouseX >= this->m_curWindowRect.maxX || mouseY >= this->m_curWindowRect.maxY) {
+        return;
+    }
+
+    GxRsPush();
+    // Turn off everything
+    GxRsSet(GxRs_PolygonOffset, 0);
+    GxRsSet(GxRs_NormalizeNormals, 0);
+    GxRsSet(GxRs_BlendingMode, 1);
+    GxRsSetAlphaRef();
+    GxRsSet(GxRs_Lighting, 0);
+    GxRsSet(GxRs_Fog, 0);
+    GxRsSet(GxRs_DepthTest, 0);
+    GxRsSet(GxRs_DepthWrite, 0);
+    GxRsSet(GxRs_ColorWrite, 15);
+    GxRsSet(GxRs_Culling, 0);
+    GxRsSet(GxRs_ClipPlaneMask, 0);
+    GxRsSet(GxRs_Texture0, this->m_cursorTexture);
+    GxRsSet(GxRs_Texture1, static_cast<CGxTex*>(nullptr));
+    GxRsSet(GxRs_ColorOp0, 0);
+    GxRsSet(GxRs_AlphaOp0, 0);
+    GxRsSet(GxRs_TexGen0, 0);
+    GxRsSet(GxRs_Unk61, 0);
+
+    C44Matrix identity;
+    GxXformPush(GxXform_World, identity);
+
+    float cursorDepth = 1.0f;
+
+    C44Matrix projection;
+
+    if (!this->StereoEnabled() ||
+        (CGxDevice::s_uiVertexShader == 0 || !s_uiVertexShader->Valid()) ||
+        (CGxDevice::s_uiPixelShader == 0 || !s_uiPixelShader->Valid())) {
+        // Disable shaders
+        GxRsSet(GxRs_VertexShader, static_cast<CGxShader*>(nullptr));
+        GxRsSet(GxRs_PixelShader, static_cast<CGxShader*>(nullptr));
+    } else {
+        cursorDepth = this->m_cursorDepth;
+
+        float minX, maxX, minY, maxY, minZ, maxZ;
+        GxXformViewport(minX, maxX, minY, maxY, minZ, maxZ);
+
+        GxXformProjection(projection);
+
+        C44Matrix mProj;
+        mProj.a0 = 2.0f / (maxX - minX);
+        mProj.b0 = 0.0f;
+        mProj.c0 = 0.0f;
+        mProj.d0 = -((minX + maxX) / (maxX - minX));
+        mProj.a1 = 0.0f;
+        mProj.b1 = 2.0f / (maxY - minY);
+        mProj.c1 = 0.0f;
+        mProj.d1 = -((minY + maxY) / (maxY - minY));
+        mProj.a2 = 0.0f;
+        mProj.b2 = 0.0f;
+        mProj.c2 = 1.00008f;
+        mProj.d2 = -0.400016f;
+        mProj.a3 = 0.0f;
+        mProj.b3 = 0.0f;
+        mProj.c3 = 1.0f;
+        mProj.d3 = 0.0f;
+        GxXformSetProjection(mProj);
+
+        GxRsSet(GxRs_VertexShader, CGxDevice::s_uiVertexShader);
+        GxRsSet(GxRs_PixelShader, CGxDevice::s_uiPixelShader);
+
+        C44Matrix transposition;
+        GxXformProjNativeTranspose(transposition);
+        GxShaderConstantsSet(GxSh_Vertex, 0, reinterpret_cast<float*>(&transposition), 0);
+    }
+
+    auto buffer = GxBufStream(GxPoolTarget_Vertex, sizeof(CGxVertexPCT), 4);
+    auto vertices = reinterpret_cast<CGxVertexPCT*>(GxBufLock(buffer));
+
+    if (!vertices) {
+        return;
+    }
+
+    auto scaleX = this->m_curWindowRect.maxX > 0.0f ? 1.0f / this->m_curWindowRect.maxX : 0.0f;
+    auto scaleY = this->m_curWindowRect.maxY > 0.0f ? 1.0f / this->m_curWindowRect.maxY : 0.0f;
+
+    mouseX -= this->m_cursorHotspotX;
+    mouseY -= this->m_cursorHotspotY;
+
+    auto minX = std::fabsf(static_cast<float>(mouseX)) * scaleX;
+    auto maxX = std::fabsf(static_cast<float>(mouseX + 32)) * scaleX;
+
+    auto minY = 1.0f - (std::fabsf(static_cast<float>(mouseY)) * scaleY);
+    auto maxY = 1.0f - (std::fabsf(static_cast<float>(mouseY + 32)) * scaleY);
+
+    if (this->m_api == GxApi_D3d9 || this->m_api == GxApi_D3d9Ex) {
+        minX -= (scaleX * 0.5f);
+        maxX += (scaleX * 0.5f);
+        minY -= (scaleY * 0.5f);
+        maxY += (scaleY * 0.5f);
+    }
+
+    // Vertex coordinates
+    vertices[0].p.x = minX;
+    vertices[0].p.y = minY;
+    vertices[0].p.z = cursorDepth;
+
+    vertices[1].p.x = minX;
+    vertices[1].p.y = maxY;
+    vertices[1].p.z = cursorDepth;
+
+    vertices[2].p.x = maxX;
+    vertices[2].p.y = minY;
+    vertices[2].p.z = cursorDepth;
+
+    vertices[3].p.x = maxX;
+    vertices[3].p.y = maxY;
+    vertices[3].p.z = cursorDepth;
+
+    // Color values
+    vertices[0].c = { 0xFF, 0xFF, 0xFF, 0xFF };
+    vertices[1].c = { 0xFF, 0xFF, 0xFF, 0xFF };
+    vertices[2].c = { 0xFF, 0xFF, 0xFF, 0xFF };
+    vertices[3].c = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+    // Texture coordinates
+    vertices[0].tc[0].x = 0.0f;
+    vertices[0].tc[0].y = 0.0f;
+
+    vertices[1].tc[0].x = 0.0f;
+    vertices[1].tc[0].y = 1.0f;
+
+    vertices[2].tc[0].x = 1.0f;
+    vertices[2].tc[0].y = 0.0f;
+
+    vertices[3].tc[0].x = 1.0f;
+    vertices[3].tc[0].y = 1.0f;
+
+    GxBufUnlock(buffer, 0);
+    GxPrimVertexPtr(buffer, GxVBF_PCT);
+
+    CGxBatch batch;
+    batch.m_primType = GxPrim_TriangleStrip;
+    batch.m_count = 4;
+    batch.m_start = 0;
+    batch.m_minIndex = 0;
+    batch.m_maxIndex = 3;
+
+    GxDraw(&batch, 0);
+
+    GxXformPop(GxXform_World);
+
+    if (this->StereoEnabled()) {
+        GxXformSetProjection(projection);
+    }
+
+    GxRsPop();
 }
 
 int32_t CGxDevice::IDevIsWindowed() {
@@ -1030,6 +1243,12 @@ void CGxDevice::XformPush(EGxXform xf) {
     this->m_xforms[xf].Push();
 }
 
+// 1-liner for Push/Set
+void CGxDevice::XformPush(EGxXform xf, const C44Matrix& matrix) {
+    this->m_xforms[xf].Push();
+    this->m_xforms[xf].Top() = matrix;
+}
+
 void CGxDevice::XformSet(EGxXform xf, const C44Matrix& matrix) {
     this->m_xforms[xf].Top() = matrix;
 }
@@ -1081,4 +1300,17 @@ void CGxDevice::XformViewport(float& minX, float& maxX, float& minY, float& maxY
     maxY = this->m_viewport.y.h;
     minZ = this->m_viewport.z.l;
     maxZ = this->m_viewport.z.h;
+}
+
+void CGxDevice::CursorSetVisible(int32_t visible) {
+    this->m_cursorVisible = visible;
+}
+
+uint32_t* CGxDevice::CursorLock() {
+    return this->m_cursor;
+}
+
+void CGxDevice::CursorUnlock(uint32_t x, uint32_t y) {
+    this->m_cursorHotspotX = x;
+    this->m_cursorHotspotY = y;
 }

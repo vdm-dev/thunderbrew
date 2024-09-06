@@ -8,6 +8,7 @@
 #include "gx/CGxStateBom.hpp"
 #include "gx/Types.hpp"
 #include "gx/Shader.hpp"
+#include "cursor/Cursor.hpp"
 #include <cstdint>
 #include <storm/Hash.hpp>
 #include <tempest/Box.hpp>
@@ -46,6 +47,8 @@ class CGxDevice {
         static uint32_t s_streamPoolSize[];
         static uint32_t s_texFormatBitDepth[];
         static uint32_t s_texFormatBytesPerBlock[];
+        static CGxShader* s_uiVertexShader;
+        static CGxShader* s_uiPixelShader;
 
         // Static functions
         static void Log(const char* format, ...);
@@ -62,6 +65,7 @@ class CGxDevice {
 #endif
         static CGxDevice* NewOpenGl();
         static uint32_t PrimCalcCount(EGxPrim primType, uint32_t count);
+        static void ICursorUpdate(EGxTexCommand, uint32_t, uint32_t, uint32_t, uint32_t, void*, uint32_t&, const void*&);
 
         // Member variables
         TSGrowableArray<CGxPushedRenderState> m_pushedStates;
@@ -102,11 +106,20 @@ class CGxDevice {
         TSFixedArray<CGxAppRenderState> m_appRenderStates;
         TSFixedArray<CGxStateBom> m_hwRenderStates;
         uint32_t m_baseMipLevel = 0; // TODO placeholder
+        int32_t m_cursorVisible = 0;
+        int32_t m_hardwareCursor = 0;
+        uint32_t m_cursorHotspotX = 0;
+        uint32_t m_cursorHotspotY = 0;
+        uint32_t m_cursor[CURSOR_IMAGE_SIZE] = { 0 };
+        CGxTex* m_cursorTexture = nullptr;
+        float m_cursorDepth = 0.0f;
 
         // Virtual member functions
         virtual void ITexMarkAsUpdated(CGxTex*) = 0;
         virtual void IRsSendToHw(EGxRenderState) = 0;
         virtual void ICursorCreate(const CGxFormat& format);
+        virtual void ICursorDestroy();
+        virtual void ICursorDraw();
         virtual int32_t DeviceCreate(int32_t (*windowProc)(void* window, uint32_t message, uintptr_t wparam, intptr_t lparam), const CGxFormat&);
         virtual int32_t DeviceSetFormat(const CGxFormat&);
         virtual void* DeviceWindow() = 0;
@@ -130,6 +143,9 @@ class CGxDevice {
         virtual void ShaderConstantsSet(EGxShTarget, uint32_t, const float*, uint32_t);
         virtual void IShaderCreate(CGxShader*) = 0;
         virtual int32_t StereoEnabled(void) = 0;
+        virtual void CursorSetVisible(int32_t visible);
+        virtual uint32_t* CursorLock();
+        virtual void CursorUnlock(uint32_t x, uint32_t y);
 
         // Member functions
         CGxDevice();
@@ -142,6 +158,7 @@ class CGxDevice {
         void DeviceSetCurWindow(const CRect&);
         void DeviceSetDefWindow(CRect const&);
         const CRect& DeviceDefWindow(void);
+        void ICursorUpdate();
         int32_t IDevIsWindowed();
         void IRsDirty(EGxRenderState);
         void IRsForceUpdate(void);
@@ -173,10 +190,12 @@ class CGxDevice {
         void XformProjection(C44Matrix&);
         void XformProjNative(C44Matrix&);
         void XformPush(EGxXform xf);
+        void XformPush(EGxXform xf, const C44Matrix& matrix);
         void XformSet(EGxXform xf, const C44Matrix& matrix);
         void XformSetViewport(float, float, float, float, float, float);
         void XformView(C44Matrix&);
         void XformViewport(float&, float&, float&, float&, float&, float&);
+
 };
 
 #endif

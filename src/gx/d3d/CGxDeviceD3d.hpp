@@ -235,6 +235,9 @@ class CGxDeviceD3d : public CGxDevice {
     D3DFORMAT m_devAdapterFormat;
     LPDIRECT3DSURFACE9 m_defColorSurface = nullptr;
     LPDIRECT3DSURFACE9 m_defDepthSurface = nullptr;
+    int32_t m_hwCursorNeedsUpdate = 1;
+    LPDIRECT3DTEXTURE9 m_hwCursorTexture = nullptr;
+    LPDIRECT3DSURFACE9 m_hwCursorBitmap = nullptr;
     LPDIRECT3DVERTEXDECLARATION9 m_d3dCurrentVertexDecl;
     LPDIRECT3DINDEXBUFFER9 m_d3dCurrentIndexBuf;
     LPDIRECT3DVERTEXBUFFER9 m_d3dVertexStreamBuf[8];
@@ -245,6 +248,10 @@ class CGxDeviceD3d : public CGxDevice {
     // Virtual member functions
     virtual void ITexMarkAsUpdated(CGxTex* texId);
     virtual void IRsSendToHw(EGxRenderState which);
+    virtual void ICursorCreate(const CGxFormat& format);
+    virtual void ICursorDestroy();
+    virtual void ICursorDraw();
+    virtual void CursorSetVisible(int32_t visible);
     virtual int32_t DeviceCreate(int32_t (*windowProc)(void* window, uint32_t message, uintptr_t wparam, intptr_t lparam), const CGxFormat& format);
     virtual int32_t DeviceSetFormat(const CGxFormat& format);
     virtual void* DeviceWindow();
@@ -302,6 +309,7 @@ class CGxDeviceD3d : public CGxDevice {
     void ITexUpload(CGxTex* texId);
     void IXformSetProjection(const C44Matrix& matrix);
     void IXformSetViewport();
+    void IXformSetWorld();
 };
 
 #endif

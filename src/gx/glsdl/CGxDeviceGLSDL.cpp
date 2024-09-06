@@ -320,7 +320,7 @@ int32_t CGxDeviceGLSDL::DeviceSetFormat(const CGxFormat& format) {
 }
 
 void* CGxDeviceGLSDL::DeviceWindow() {
-    return &this->m_GLSDLWindow;
+    return this->m_GLSDLWindow.m_sdlWindow;
 }
 
 void CGxDeviceGLSDL::Draw(CGxBatch* batch, int32_t indexed) {
@@ -681,6 +681,8 @@ void CGxDeviceGLSDL::ISetCaps(const CGxFormat& format) {
     this->m_caps.m_texMaxSize[GxTex_Rectangle] = 4096;
     this->m_caps.m_texMaxSize[GxTex_NonPow2] = 4096;
 
+    this->m_caps.m_hardwareCursor = 0;
+
     // TODO
 }
 
@@ -926,7 +928,17 @@ void CGxDeviceGLSDL::IStateSyncVertexPtrs() {
     );
 }
 
+void CGxDeviceGLSDL::IXformSetWorld() {
+    auto& stack = this->m_xforms[GxXform_World];
+    this->m_GLSDLDevice.SetTransform('WRLD', reinterpret_cast<const float*>(&stack.TopConst()));
+    stack.m_dirty = 0;
+}
+
 void CGxDeviceGLSDL::IStateSyncXforms() {
+    if (this->m_xforms[GxXform_World].m_dirty) {
+        this->IXformSetWorld();
+    }
+
     // TODO this->IXformSetWorld();
     // TODO this->IXformSetTex();
 
@@ -1268,12 +1280,12 @@ void CGxDeviceGLSDL::SceneClear(uint32_t mask, CImVector color) {
 }
 
 void CGxDeviceGLSDL::ScenePresent() {
-    this->m_GLSDLWindow.DispatchEvents();
-
     if (this->m_context) {
         // TODO
 
         CGxDevice::ScenePresent();
+
+        this->ICursorDraw();
 
         // TODO
 

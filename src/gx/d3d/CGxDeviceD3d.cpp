@@ -336,12 +336,7 @@ LRESULT CGxDeviceD3d::WindowProcD3d(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
         if (device) {
             if (device->m_d3dDevice && lParam == 1) {
                 SetCursor(nullptr);
-                BOOL show = TRUE;
-                // if (device->unk2904[0x13] == 0) || (device->.unk2904[0x14] == 0)) {
-                //     show = FALSE;
-                // } else {
-                //     show = TRUE;
-                // }
+                BOOL show = device->m_cursorVisible && device->m_hardwareCursor ? TRUE : FALSE;
                 device->m_d3dDevice->ShowCursor(show);
             }
         }
@@ -889,6 +884,8 @@ int32_t CGxDeviceD3d::ICreateD3dDevice(const CGxFormat& format) {
 
         this->IStateSetD3dDefaults();
 
+        this->ICursorCreate(format);
+
         // TODO
 
         return 1;
@@ -1199,6 +1196,94 @@ void CGxDeviceD3d::IRsSendToHw(EGxRenderState which) {
     }
 }
 
+void CGxDeviceD3d::ICursorCreate(const CGxFormat& format) {
+    CGxDevice::ICursorCreate(format);
+
+    if (this->m_hardwareCursor && this->m_hwCursorTexture == nullptr) {
+        this->m_d3dDevice->CreateTexture(
+            32,
+            32,
+            1,
+            0,
+            D3DFMT_A8R8G8B8,
+            D3DPOOL_MANAGED,
+            &this->m_hwCursorTexture,
+            nullptr);
+
+        if (this->m_hwCursorTexture) {
+            this->m_hwCursorTexture->GetSurfaceLevel(0, &this->m_hwCursorBitmap);
+        }
+
+        this->m_hwCursorNeedsUpdate = 1;
+        this->ICursorDraw();
+    }
+}
+
+void CGxDeviceD3d::ICursorDestroy() {
+    CGxDevice::ICursorDestroy();
+
+    if (this->m_hwCursorBitmap) {
+        this->m_hwCursorBitmap->Release();
+        this->m_hwCursorBitmap = nullptr;
+    }
+
+    if (this->m_hwCursorTexture) {
+        this->m_hwCursorTexture->Release();
+        this->m_hwCursorTexture = nullptr;
+    }
+}
+
+void CGxDeviceD3d::CursorSetVisible(int32_t visible) {
+    CGxDevice::CursorSetVisible(visible);
+
+    if (this->m_hardwareCursor && this->m_context) {
+        POINT point;
+        RECT rect;
+        GetCursorPos(&point);
+        ScreenToClient(this->m_hwnd, &point);
+        GetClientRect(this->m_hwnd, &rect);
+
+        if (rect.left <= point.x && (point.x < rect.right && (rect.top <= point.y)) && point.y < rect.bottom) {
+            this->m_d3dDevice->ShowCursor(this->m_cursorVisible);
+        }
+    }
+}
+
+void CGxDeviceD3d::ICursorDraw() {
+    if (!this->m_hardwareCursor) {
+        this->ISceneBegin();
+    }
+
+    CGxDevice::ICursorDraw();
+
+    if (!this->m_hardwareCursor) {
+        this->ISceneEnd();
+        if (!this->m_hardwareCursor) {
+            return;
+        }
+    }
+
+    if (this->m_hwCursorNeedsUpdate && this->m_hwCursorBitmap && this->m_context) {
+        D3DLOCKED_RECT lockedRect;
+        if SUCCEEDED(this->m_hwCursorBitmap->LockRect(&lockedRect, nullptr, 0)) {
+            // upload cursor texture data
+            auto src = reinterpret_cast<uint8_t*>(this->m_cursor);
+
+            for (int32_t i = 0; i < 32; i++) {
+                auto dest = reinterpret_cast<uint8_t*>(lockedRect.pBits) + (lockedRect.Pitch * i);
+                memcpy(dest, src, 128);
+                src += 128;
+            }
+
+            this->m_hwCursorBitmap->UnlockRect();
+
+            this->m_d3dDevice->SetCursorProperties(this->m_cursorHotspotX, this->m_cursorHotspotY, this->m_hwCursorBitmap);
+        }
+
+        this->m_hwCursorNeedsUpdate = 0;
+    }
+}
+
 void CGxDeviceD3d::ISceneBegin() {
     if (this->m_context) {
         this->ShaderConstantsClear();
@@ -1302,6 +1387,10 @@ void CGxDeviceD3d::ISetCaps(const CGxFormat& format) {
     }
 
     // TODO modify shader targets based on format
+
+    // Detect hardware cursor
+
+    this->m_caps.m_hardwareCursor = this->m_d3dCaps.CursorCaps & D3DCURSORCAPS_COLOR;
 
     // Texture formats
 
@@ -1596,7 +1685,7 @@ void CGxDeviceD3d::IStateSync() {
     this->IShaderConstantsFlush();
     this->IRsSync(0);
 
-    if (this->m_hwRenderStates[GxRs_VertexShader] == nullptr && this->m_appRenderStates[GxRs_VertexShader].m_value == nullptr) {
+    if (this->m_hwRenderStates[GxRs_VertexShader] == nullptr || this->m_appRenderStates[GxRs_VertexShader].m_value == nullptr) {
         this->IStateSyncLights();
         this->IStateSyncMaterial();
         this->IStateSyncXforms();
@@ -1734,7 +1823,9 @@ void CGxDeviceD3d::IStateSyncXforms() {
         this->m_xforms[GxXform_View].m_dirty = 0;
     }
 
-    // TODO world
+    if (this->m_xforms[GxXform_World].m_dirty) {
+        this->IXformSetWorld();
+    }
 
     // TODO tex
 }
@@ -1932,6 +2023,7 @@ UNLOCK:
 
 void CGxDeviceD3d::IXformSetProjection(const C44Matrix& matrix) {
 #if defined(_MSC_VER)
+    // This is the correct way
     DirectX::XMMATRIX projNative;
     memcpy(&projNative, &matrix, sizeof(projNative));
 
@@ -1966,6 +2058,8 @@ void CGxDeviceD3d::IXformSetProjection(const C44Matrix& matrix) {
     this->m_xforms[GxXform_Projection].m_dirty = 1;
     memcpy(&this->m_projNative, &projNative, sizeof(this->m_projNative));
 #else
+    // Without the DirectX::XMMATRIX, we can soldier on
+    // with a Tempest matrix
     C44Matrix projNative;
     memcpy(&projNative, &matrix, sizeof(projNative));
 
@@ -2026,6 +2120,19 @@ void CGxDeviceD3d::IXformSetViewport() {
     this->intF6C = 0;
 }
 
+void CGxDeviceD3d::IXformSetWorld() {
+    static int32_t isIdent = 0;
+
+    auto& stack = this->m_xforms[GxXform_World];
+
+    if (!isIdent || !(stack.m_flags[stack.m_level] & CGxMatrixStack::F_Identity)) {
+        this->m_d3dDevice->SetTransform(D3DTS_WORLD, reinterpret_cast<const D3DMATRIX*>(&stack.TopConst()));
+    }
+
+    isIdent = stack.m_flags[stack.m_level] & CGxMatrixStack::F_Identity;
+    stack.m_dirty = 0;
+}
+
 void CGxDeviceD3d::PoolSizeSet(CGxPool* pool, uint32_t size) {
     // TODO
 }
@@ -2058,6 +2165,8 @@ void CGxDeviceD3d::ScenePresent() {
     if (this->m_context) {
         CGxDevice::ScenePresent();
         this->ISceneEnd();
+
+        this->ICursorDraw();
 
         // TODO
 
@@ -2092,3 +2201,4 @@ void CGxDeviceD3d::XformSetProjection(const C44Matrix& matrix) {
     CGxDevice::XformSetProjection(matrix);
     this->IXformSetProjection(matrix);
 }
+

@@ -31,6 +31,11 @@ void GxXformPush(EGxXform xf) {
     g_theGxDevicePtr->XformPush(xf);
 }
 
+// 1-liner for Push/Set
+void GxXformPush(EGxXform xf, const C44Matrix& matrix) {
+    g_theGxDevicePtr->XformPush(xf, matrix);
+}
+
 void GxXformSet(EGxXform xf, const C44Matrix& matrix) {
     g_theGxDevicePtr->XformSet(xf, matrix);
 }

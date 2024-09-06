@@ -703,6 +703,8 @@ void CGxDeviceGLL::ISetCaps(const CGxFormat& format) {
     this->m_caps.m_texMaxSize[GxTex_Rectangle] = 4096;
     this->m_caps.m_texMaxSize[GxTex_NonPow2] = 4096;
 
+    this->m_caps.m_hardwareCursor = 0;
+
     // TODO
 }
 

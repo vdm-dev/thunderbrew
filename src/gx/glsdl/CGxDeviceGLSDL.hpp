@@ -74,6 +74,7 @@ class CGxDeviceGLSDL : public CGxDevice {
         void IXformSetProjection(const C44Matrix&);
         void IXformSetView(const C44Matrix&);
         void IXformSetViewport();
+        void IXformSetWorld();
         void PatchPixelShader(CGxShader*);
         void PatchVertexShader(CGxShader*);
         void Resize(uint32_t width, uint32_t height);

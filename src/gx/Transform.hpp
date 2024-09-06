@@ -16,6 +16,8 @@ void GxXformProjNativeTranspose(C44Matrix&);
 
 void GxXformPush(EGxXform xf);
 
+void GxXformPush(EGxXform xf, const C44Matrix& matrix);
+
 void GxXformSet(EGxXform xf, const C44Matrix& matrix);
 
 void GxXformSetProjection(const C44Matrix&);

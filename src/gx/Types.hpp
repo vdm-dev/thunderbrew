@@ -339,10 +339,17 @@ enum PIXEL_FORMAT {
 };
 
 struct C4Pixel {
-    char b;
-    char g;
-    char r;
-    char a;
+    uint8_t b;
+    uint8_t g;
+    uint8_t r;
+    uint8_t a;
+};
+
+struct C4LargePixel {
+    uint64_t b;
+    uint64_t g;
+    uint64_t r;
+    uint64_t a;
 };
 
 struct MipBits {
