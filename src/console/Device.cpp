@@ -31,15 +31,14 @@ const char* g_gxApiNames[GxApis_Last] = {
 EGxApi g_gxApiSupported[] = {
 #if defined(WHOA_SYSTEM_WIN)
     GxApi_D3d9,
-    GxApi_GLSDL
 #endif
 
 #if defined(WHOA_SYSTEM_MAC)
-    GxApi_GLL
+    GxApi_GLL,
 #endif
 
-#if defined(WHOA_SYSTEM_LINUX)
-    GxApi_GLSDL
+#if defined(WHOA_BUILD_GLSDL)
+    GxApi_GLSDL,
 #endif
 };
 
