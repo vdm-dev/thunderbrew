@@ -1,10 +1,18 @@
 #include "event/Input.hpp"
 #include "client/Gui.hpp"
 #include <storm/Error.hpp>
+#include <tempest/Vector.hpp>
 #include <windows.h>
+
+#if defined(WHOA_BUILD_GLSDL)
+#include "event/sdl/Input.hpp"
+#endif
 
 static RECT s_defaultWindowRect;
 static int32_t s_savedResize;
+
+static HWND s_mouseWnd;
+static C2iVector s_mousePos;
 
 void CenterMouse() {
     // TODO
@@ -14,8 +22,10 @@ void RestoreMouse() {
     // TODO
 }
 
-void SaveMouse(POINT mousePos, HWND hwnd) {
-    // TODO
+void SaveMouse(HWND window, const POINT& pt) {
+    s_mouseWnd = window;
+    s_mousePos.x = static_cast<int32_t>(pt.x);
+    s_mousePos.y = static_cast<int32_t>(pt.y);
 }
 
 int32_t ConvertButton(uint32_t message, uintptr_t wparam, MOUSEBUTTON* button) {
@@ -328,6 +338,13 @@ int32_t HandleMouseUp(uint32_t message, uintptr_t wparam, bool* xbutton, HWND hw
 }
 
 int32_t OsInputGet(OSINPUT* id, int32_t* param0, int32_t* param1, int32_t* param2, int32_t* param3) {
+#if defined(WHOA_BUILD_GLSDL)
+    if (SDLInputActive()) {
+        // SDL handles input events for us
+        return SDLInputGet(id, param0, param1, param2, param3);
+    }
+#endif
+
     *id = static_cast<OSINPUT>(-1);
 
     if (s_savedResize) {
@@ -421,6 +438,34 @@ void OsInputSetMouseMode(OS_MOUSE_MODE mode) {
     } else if (mode == OS_MOUSE_MODE_RELATIVE) {
         Input::s_osMouseMode = mode;
         CenterMouse();
+    }
+}
+
+void OsInputGetMousePosition(int32_t* x, int32_t* y) {
+#if defined(WHOA_BUILD_GLSDL)
+    if (SDLInputActive()) {
+        SDLInputGetMousePosition(x, y);
+        return;
+    }
+#endif
+
+    // Get HWND created by CGxDevice
+    auto window = static_cast<HWND>(OsGuiGetWindow(0));
+
+    POINT pt;
+    GetCursorPos(&pt);
+    ScreenToClient(window, &pt);
+
+    if (Input::s_osMouseMode != OS_MOUSE_MODE_RELATIVE) {
+        SaveMouse(window, pt);
+    }
+
+    // Provide mouse position to caller
+    if (x) {
+        *x = static_cast<int32_t>(pt.x);
+    }
+    if (y) {
+        *y = static_cast<int32_t>(pt.y);
     }
 }
 
@@ -546,7 +591,7 @@ int32_t OsWindowProc(void* window, uint32_t message, uintptr_t wparam, intptr_t 
             GetCursorPos(&mousePos);
             ScreenToClient(hwnd, &mousePos);
             OsQueuePut(OS_INPUT_MOUSE_MOVE, 0, mousePos.x, mousePos.y, 0);
-            SaveMouse(mousePos, hwnd);
+            SaveMouse(hwnd, mousePos);
         }
 
         break;

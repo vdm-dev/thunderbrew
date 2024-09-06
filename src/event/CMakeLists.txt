@@ -22,6 +22,12 @@ if(WHOA_SYSTEM_LINUX)
     list(APPEND PRIVATE_SOURCES ${LINUX_SOURCES})
 endif()
 
+# SDL has its own input event processing
+if(WHOA_BUILD_GLSDL)
+    file(GLOB SDL_SOURCES "sdl/*.cpp")
+    list(APPEND PRIVATE_SOURCES ${SDL_SOURCES})
+endif()
+
 add_library(event STATIC
     ${PRIVATE_SOURCES}
 )

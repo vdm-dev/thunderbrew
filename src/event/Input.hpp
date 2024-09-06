@@ -64,6 +64,8 @@ void OsInputPostEvent(OSINPUT id, int32_t param0, int32_t param1, int32_t param2
 
 void OsInputSetMouseMode(OS_MOUSE_MODE mode);
 
+void OsInputGetMousePosition(int32_t* x, int32_t* y);
+
 int32_t OsQueueGet(OSINPUT* id, int32_t* param0, int32_t* param1, int32_t* param2, int32_t* param3);
 
 void OsQueuePut(OSINPUT id, int32_t param0, int32_t param1, int32_t param2, int32_t param3);
