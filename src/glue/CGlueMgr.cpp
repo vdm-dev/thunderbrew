@@ -48,6 +48,7 @@ char CGlueMgr::m_accountName[1280];
 float CGlueMgr::m_aspect;
 bool CGlueMgr::m_authenticated;
 char CGlueMgr::m_currentScreen[64];
+MipBits* CGlueMgr::m_cursorMipBits;
 int32_t CGlueMgr::m_disconnectPending;
 int32_t CGlueMgr::m_displayingQueueDialog;
 CGlueMgr::GLUE_IDLE_STATE CGlueMgr::m_idleState;
@@ -469,6 +470,20 @@ void CGlueMgr::PollLoginServerLogin() {
     }
 }
 
+void CGlueMgr::InitCursor() {
+    uint32_t width;
+    uint32_t height;
+    PIXEL_FORMAT format = PIXEL_ARGB8888;
+
+    CGlueMgr::m_cursorMipBits = TextureLoadImage("Interface\\Cursor\\Point.blp", &width, &height, &format, nullptr, nullptr, nullptr, 0);
+
+    STORM_ASSERT(width == 32);
+    STORM_ASSERT(height == 32);
+    STORM_ASSERT(format == PIXEL_ARGB8888);
+
+    CGlueMgr::m_simpleTop->SetCursor(CGlueMgr::m_cursorMipBits);
+}
+
 void CGlueMgr::Resume() {
     // TODO
     // CGlueMgr::m_disconnectPending = 0;
@@ -497,8 +512,9 @@ void CGlueMgr::Resume() {
     CGlueMgr::m_simpleTop = top;
     CGlueMgr::m_simpleTop->m_displaySizeCallback = &CGlueMgr::HandleDisplaySizeChanged;
 
+    CGlueMgr::InitCursor();
+
     // TODO
-    // - setting cursor texture
     // - setting mouse mode
 
     FrameScript_Flush();

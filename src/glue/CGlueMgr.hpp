@@ -3,6 +3,7 @@
 
 #include "event/Event.hpp"
 #include "net/Types.hpp"
+#include "gx/Texture.hpp"
 #include <cstdint>
 
 class CSimpleTop;
@@ -36,6 +37,7 @@ class CGlueMgr {
         static float m_aspect;
         static bool m_authenticated;
         static char m_currentScreen[];
+        static MipBits* m_cursorMipBits;
         static int32_t m_disconnectPending;
         static int32_t m_displayingQueueDialog;
         static GLUE_IDLE_STATE m_idleState;
@@ -61,6 +63,7 @@ class CGlueMgr {
         static int32_t HandleDisplaySizeChanged(const CSizeEvent& event);
         static int32_t Idle(const void* a1, void* a2);
         static void Initialize();
+        static void InitCursor();
         static void LoginServerLogin(const char* accountName, const char* password);
         static void QuitGame();
         static void PollAccountLogin(int32_t errorCode, const char* msg, int32_t complete, int32_t result, WOWCS_OPS op);
