@@ -1,2 +1,42 @@
-BlizzardIcon.ico ICON DISCARDABLE "Whoa.ico"
-BlizzardCursor.cur CURSOR "Whoa.cur"
+#pragma code_page(65001) // UTF-8
+
+#ifdef _DEBUG
+BlizzardIcon.ico ICON DISCARDABLE "debug\Whoa.ico"
+#else
+BlizzardIcon.ico ICON DISCARDABLE "release\Whoa.ico"
+#endif
+BlizzardCursor.cur CURSOR "common\Whoa.cur"
+
+1 VERSIONINFO
+FILEVERSION 3,3,5,12340
+PRODUCTVERSION 3,3,0,0
+FILEFLAGSMASK 0x23fL
+FILEFLAGS 0x4L
+FILEOS 0x1L
+FILETYPE 0x1L
+FILESUBTYPE 0x0L
+BEGIN
+BLOCK "StringFileInfo"
+BEGIN
+BLOCK "000004B0"
+BEGIN
+#ifdef _DEBUG
+VALUE "FileDescription", L"Whoa (Debug)"
+#else
+VALUE "FileDescription", L"Whoa (Release)"
+#endif
+VALUE "CompanyName", L"Blizzard Entertainment"
+VALUE "FileVersion", L"3.3.5.12340"
+VALUE "InternalName", L"World of Warcraft"
+VALUE "LegalCopyright", L"Copyright © 2004"
+VALUE "LegalTrademarks", L""
+VALUE "OriginalFilename", L"Whoa.exe"
+VALUE "ProductName", L"World of Warcraft"
+VALUE "ProductVersion", L"Version 3.3"
+END
+END
+BLOCK "VarFileInfo"
+BEGIN
+VALUE "Translation", 0, 0x4B0
+END
+END
