@@ -410,11 +410,11 @@ void CGxDevice::ICursorDraw() {
     mouseX -= this->m_cursorHotspotX;
     mouseY -= this->m_cursorHotspotY;
 
-    auto minX = std::fabsf(static_cast<float>(mouseX)) * scaleX;
-    auto maxX = std::fabsf(static_cast<float>(mouseX + 32)) * scaleX;
+    auto minX = std::abs(static_cast<float>(mouseX)) * scaleX;
+    auto maxX = std::abs(static_cast<float>(mouseX + 32)) * scaleX;
 
-    auto minY = 1.0f - (std::fabsf(static_cast<float>(mouseY)) * scaleY);
-    auto maxY = 1.0f - (std::fabsf(static_cast<float>(mouseY + 32)) * scaleY);
+    auto minY = 1.0f - (std::abs(static_cast<float>(mouseY)) * scaleY);
+    auto maxY = 1.0f - (std::abs(static_cast<float>(mouseY + 32)) * scaleY);
 
     if (this->m_api == GxApi_D3d9 || this->m_api == GxApi_D3d9Ex) {
         minX -= (scaleX * 0.5f);
