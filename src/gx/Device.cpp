@@ -39,11 +39,14 @@ CGxDevice* GxDevCreate(EGxApi api, int32_t (*windowProc)(void* window, uint32_t 
 #endif
 
     default:
-        // Error
         break;
     }
 
-    STORM_ASSERT(device != nullptr);
+    if (device == nullptr) {
+        STORM_PANIC("GxDevCreate: failed to create graphics device %d", api);
+    }
+
+    // STORM_ASSERT(device != nullptr);
 
     g_theGxDevicePtr = device;
 
