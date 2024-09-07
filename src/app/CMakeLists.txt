@@ -1,7 +1,14 @@
-if(WHOA_SYSTEM_WIN)
+if (WHOA_SYSTEM_WIN)
     file(GLOB PRIVATE_SOURCES "win/*.cpp" "win/Whoa.rc")
 
     add_executable(Whoa WIN32 ${PRIVATE_SOURCES})
+
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_definitions(Whoa
+            PRIVATE
+                -DWHOA_APP_DEBUG
+        )
+    endif ()
 
     target_link_libraries(Whoa
         PRIVATE
@@ -11,9 +18,9 @@ if(WHOA_SYSTEM_WIN)
             net
             util
         )
-endif()
+endif ()
 
-if(WHOA_SYSTEM_MAC)
+if (WHOA_SYSTEM_MAC)
     file(GLOB PRIVATE_SOURCES "mac/*.cpp" "mac/*.mm")
 
     set_source_files_properties(${PRIVATE_SOURCES}
@@ -35,9 +42,9 @@ if(WHOA_SYSTEM_MAC)
     )
 
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/mac/MainMenu.nib DESTINATION "bin")
-endif()
+endif ()
 
-if(WHOA_SYSTEM_LINUX)
+if (WHOA_SYSTEM_LINUX)
     file(GLOB PRIVATE_SOURCES "linux/*.cpp")
 
     add_executable(Whoa ${PRIVATE_SOURCES})
@@ -50,7 +57,7 @@ if(WHOA_SYSTEM_LINUX)
             net
             util
     )
-endif()
+endif ()
 
 target_include_directories(Whoa
     PRIVATE

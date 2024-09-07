@@ -1,6 +1,6 @@
 #pragma code_page(65001) // UTF-8
 
-#ifdef _DEBUG
+#ifdef WHOA_APP_DEBUG
 BlizzardIcon.ico ICON DISCARDABLE "debug/Whoa.ico"
 #else
 BlizzardIcon.ico ICON DISCARDABLE "release/Whoa.ico"
