@@ -3,13 +3,13 @@
 #include <bc/os/File.hpp>
 #include <cstdio>
 
-uint32_t SI2::sm_logFlags = SLOG_FLAG_DEFAULT;
+uint32_t SI2::sm_logFlags = STORM_LOG_FLAG_DEFAULT;
 HSLOG SI2::sm_log = nullptr;
 
 int32_t SI2::Log_Init() {
     OsCreateDirectory("Logs", 0);
     SLogCreate("Logs\\Sound.log", sm_logFlags, &sm_log);
-    sm_logFlags |= SLOG_FLAG_APPEND;
+    sm_logFlags |= STORM_LOG_FLAG_APPEND;
     // return OsDeleteFile((Blizzard::File*)"Logs\\SESound.log");
     return 0;
 }
