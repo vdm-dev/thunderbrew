@@ -1,11 +1,11 @@
 #pragma code_page(65001) // UTF-8
 
 #ifdef _DEBUG
-BlizzardIcon.ico ICON DISCARDABLE "debug\Whoa.ico"
+BlizzardIcon.ico ICON DISCARDABLE "debug/Whoa.ico"
 #else
-BlizzardIcon.ico ICON DISCARDABLE "release\Whoa.ico"
+BlizzardIcon.ico ICON DISCARDABLE "release/Whoa.ico"
 #endif
-BlizzardCursor.cur CURSOR "common\Whoa.cur"
+BlizzardCursor.cur CURSOR "common/Whoa.cur"
 
 1 VERSIONINFO
 FILEVERSION 3,3,5,12340
