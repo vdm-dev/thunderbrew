@@ -4,7 +4,7 @@
 #include "gx/texture/CGxTex.hpp"
 #include "math/Utils.hpp"
 #include <algorithm>
-#include <directxmath.h>
+#include <DirectXMath.h>
 
 int32_t CGxDeviceD3d::s_clientAdjustWidth;
 int32_t CGxDeviceD3d::s_clientAdjustHeight;
