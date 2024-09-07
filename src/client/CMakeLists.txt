@@ -3,21 +3,21 @@ file(GLOB PRIVATE_SOURCES
     "gui/*.cpp"
 )
 
-if(WHOA_SYSTEM_WIN)
+if (WHOA_SYSTEM_WIN)
     file(GLOB WIN_SOURCES
         "gui/win/*.cpp"
     )
     list(APPEND PRIVATE_SOURCES ${WIN_SOURCES})
 endif()
 
-if(WHOA_SYSTEM_MAC)
+if (WHOA_SYSTEM_MAC)
     file(GLOB MAC_SOURCES
         "gui/mac/*.cpp"
     )
     list(APPEND PRIVATE_SOURCES ${MAC_SOURCES})
 endif()
 
-if(WHOA_SYSTEM_LINUX)
+if (WHOA_SYSTEM_LINUX)
     file(GLOB LINUX_SOURCES
         "gui/linux/*.cpp"
     )

@@ -1,11 +1,12 @@
 #include <unordered_map>
-#include <storm/Unicode.hpp>
-#include <SDL2/SDL.h>
 
 #include "event/sdl/Input.hpp"
-#include "client/gui/OsGui.hpp"
+#include "client/Gui.hpp"
 #include "gx/Device.hpp"
 #include "gx/Window.hpp"
+
+#include <storm/Unicode.hpp>
+#include <SDL2/SDL.h>
 
 static const std::unordered_map<SDL_Scancode, KEY> s_keyConversion = {
     { SDL_SCANCODE_LSHIFT,       KEY_LSHIFT },
@@ -287,6 +288,8 @@ int32_t SDLInputGet(OSINPUT* id, int32_t* param0, int32_t* param1, int32_t* para
                 static_cast<int16_t>(bounds->left + width)
             };
             SetSavedWindowBounds(newBounds);
+
+            break;
         }
         case SDL_QUIT: {
             *id = OS_INPUT_CLOSE;

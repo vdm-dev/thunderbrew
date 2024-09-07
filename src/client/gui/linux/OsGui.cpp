@@ -1,7 +1,14 @@
 #include "client/gui/OsGui.hpp"
 
+static void* s_GxDevWindow = nullptr;
+
 void* OsGuiGetWindow(int32_t type) {
-    return nullptr;
+    switch (type) {
+    case 0:
+        return s_GxDevWindow;
+    default:
+        return nullptr;
+    }
 }
 
 bool OsGuiIsModifierKeyDown(int32_t key) {
@@ -14,5 +21,5 @@ int32_t OsGuiProcessMessage(void* message) {
 }
 
 void OsGuiSetGxWindow(void* window) {
-    // TODO
+    s_GxDevWindow = window;
 }
