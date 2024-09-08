@@ -75,6 +75,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GN
     endif ()
 endif ()
 
+# MinGW Options
+if (WHOA_SYSTEM_WIN AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-static-libgcc -static-libstdc++ -static")
+endif ()
+
 # OS defines
 if (WHOA_SYSTEM_WIN)
     # Avoid win32 header hell
