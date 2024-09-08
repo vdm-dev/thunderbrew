@@ -40,7 +40,7 @@ endif ()
 unset(WHOA_UB_SAN_HELP_TEXT)
 
 # GLSDL 
-if (WHOA_SYSTEM_WINDOWS)
+if (WHOA_SYSTEM_WIN)
     # GLSDL can be disabled on Windows to save time
     option(WHOA_BUILD_GLSDL "Disable/Enable compilation of the OpenGL/SDL2 graphics rendering device on Windows." 0)
 elseif (WHOA_SYSTEM_MAC)
