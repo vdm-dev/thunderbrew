@@ -1,5 +1,9 @@
 #pragma code_page(65001) // UTF-8
 
+#ifdef _DEBUG
+#define WHOA_APP_DEBUG
+#endif
+
 #ifdef WHOA_APP_DEBUG
 BlizzardIcon.ico ICON DISCARDABLE "debug/Whoa.ico"
 #else
@@ -20,7 +24,7 @@ BLOCK "StringFileInfo"
 BEGIN
 BLOCK "000004B0"
 BEGIN
-#ifdef _DEBUG
+#ifdef WHOA_APP_DEBUG
 VALUE "FileDescription", L"Whoa (Debug)"
 #else
 VALUE "FileDescription", L"Whoa (Release)"
@@ -28,7 +32,7 @@ VALUE "FileDescription", L"Whoa (Release)"
 VALUE "CompanyName", L"Blizzard Entertainment"
 VALUE "FileVersion", L"3.3.5.12340"
 VALUE "InternalName", L"World of Warcraft"
-VALUE "LegalCopyright", L"Copyright © 2004"
+VALUE "LegalCopyright", L"Copyright \xA9 2004"
 VALUE "LegalTrademarks", L""
 VALUE "OriginalFilename", L"Whoa.exe"
 VALUE "ProductName", L"World of Warcraft"

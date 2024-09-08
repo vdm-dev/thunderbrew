@@ -3,11 +3,9 @@ if (WHOA_SYSTEM_WIN)
 
     add_executable(Whoa WIN32 ${PRIVATE_SOURCES})
 
+    # Set debug icon and description if in debug mode
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_compile_definitions(Whoa
-            PRIVATE
-                -DWHOA_APP_DEBUG
-        )
+        set(CMAKE_RC_FLAGS ${CMAKE_RC_FLAGS} -DWHOA_APP_DEBUG)
     endif ()
 
     target_link_libraries(Whoa
