@@ -14,7 +14,7 @@ float Screen::s_elapsedSec = 0.0f;
 int32_t Screen::s_presentDisable = 0;
 static HOBJECT s_stockObjects[SCRNSTOCKOBJECTS];
 static float s_stockObjectHeights[SCRNSTOCKOBJECTS] = { 0.01953125f, 0.01953125f };
-static STORM_EXPLICIT_LIST(CILayer, zorderlink) s_zOrderList;
+static STORM_EXPLICIT_LIST(CILayer, zorderlink) s_zorderlist;
 
 int32_t OnIdle(const EVENT_DATA_IDLE* data, void* a2) {
     Screen::s_elapsedSec = data->elapsedSec + Screen::s_elapsedSec;
@@ -38,7 +38,7 @@ int32_t OnPaint(const void* a1, void* a2) {
     SRgnCombineRectf(rgn.m_handle, &baseRect, nullptr, 2);
 
     // Walk the layer list backward (highest z-order to lowest) to establish visibility rects
-    for (auto layer = s_zOrderList.Tail(); layer; layer = layer->zorderlink.Prev()) {
+    for (auto layer = s_zorderlist.Tail(); layer; layer = layer->zorderlink.Prev()) {
         SRgnGetBoundingRectf(rgn.m_handle, &layer->visible);
 
         layer->visible.left = std::max(layer->visible.left, layer->rect.left);
@@ -58,7 +58,7 @@ int32_t OnPaint(const void* a1, void* a2) {
     GxXformViewport(minX, maxX, minY, maxY, minZ, maxZ);
 
     // Walk the layer list forward (lowest z-order to highest) to paint visible layers
-    for (auto layer = s_zOrderList.Head(); layer; layer = layer->zorderlink.Next()) {
+    for (auto layer = s_zorderlist.Head(); layer; layer = layer->zorderlink.Next()) {
         if (layer->visible.right > layer->visible.left && layer->visible.top > layer->visible.bottom) {
             if (layer->flags & 0x4) {
                 GxXformSetViewport(
@@ -82,8 +82,6 @@ int32_t OnPaint(const void* a1, void* a2) {
 
             if (layer->flags & 0x2) {
                 C44Matrix identity;
-                GxXformSetView(identity);
-
                 C44Matrix orthoProj;
                 GxuXformCreateOrtho(
                     layer->visible.left,
@@ -94,6 +92,7 @@ int32_t OnPaint(const void* a1, void* a2) {
                     500.0f,
                     orthoProj
                 );
+                GxXformSetView(identity);
                 GxXformSetProjection(orthoProj);
             }
 
@@ -182,13 +181,13 @@ void ScrnLayerCreate(const RECTF* rect, float zOrder, uint32_t flags, void* para
     layer->param = param;
     layer->paintfunc = paintFunc;
 
-    auto node = s_zOrderList.Head();
+    auto node = s_zorderlist.Head();
 
     while (node && zOrder < node->zorder) {
         node = node->zorderlink.Next();
     }
 
-    s_zOrderList.LinkNode(layer, 1, node);
+    s_zorderlist.LinkNode(layer, 1, node);
 
     *layerPtr = HandleCreate(layer);
 }
