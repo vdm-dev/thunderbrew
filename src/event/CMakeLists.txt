@@ -5,28 +5,28 @@ if (WHOA_SYSTEM_WIN)
         "win/*.cpp"
     )
     list(APPEND PRIVATE_SOURCES ${WIN_SOURCES})
-endif()
+endif ()
 
-if(WHOA_SYSTEM_MAC)
+if (WHOA_SYSTEM_MAC)
     file(GLOB MAC_SOURCES
         "mac/*.cpp"
         "mac/*.mm"
     )
     list(APPEND PRIVATE_SOURCES ${MAC_SOURCES})
-endif()
+endif ()
 
 if (WHOA_SYSTEM_LINUX)
     file(GLOB LINUX_SOURCES
         "linux/*.cpp"
     )
     list(APPEND PRIVATE_SOURCES ${LINUX_SOURCES})
-endif()
+endif ()
 
 # SDL has its own input event processing
 if (WHOA_BUILD_GLSDL)
     file(GLOB SDL_SOURCES "sdl/*.cpp")
     list(APPEND PRIVATE_SOURCES ${SDL_SOURCES})
-endif()
+endif ()
 
 add_library(event STATIC
     ${PRIVATE_SOURCES}
@@ -51,4 +51,4 @@ if (WHOA_BUILD_GLSDL)
     target_link_libraries(event
         PRIVATE
             SDL2::SDL2-static)
-endif()
+endif ()

@@ -8,21 +8,21 @@ if (WHOA_SYSTEM_WIN)
         "gui/win/*.cpp"
     )
     list(APPEND PRIVATE_SOURCES ${WIN_SOURCES})
-endif()
+endif ()
 
 if (WHOA_SYSTEM_MAC)
     file(GLOB MAC_SOURCES
         "gui/mac/*.cpp"
     )
     list(APPEND PRIVATE_SOURCES ${MAC_SOURCES})
-endif()
+endif ()
 
 if (WHOA_SYSTEM_LINUX)
     file(GLOB LINUX_SOURCES
         "gui/linux/*.cpp"
     )
     list(APPEND PRIVATE_SOURCES ${LINUX_SOURCES})
-endif()
+endif ()
 
 add_library(client STATIC
     ${PRIVATE_SOURCES}
