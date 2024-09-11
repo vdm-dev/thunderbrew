@@ -2022,8 +2022,6 @@ UNLOCK:
 }
 
 void CGxDeviceD3d::IXformSetProjection(const C44Matrix& matrix) {
-#if defined(_MSC_VER)
-    // This is the correct way
     DirectX::XMMATRIX projNative;
     memcpy(&projNative, &matrix, sizeof(projNative));
 
@@ -2057,43 +2055,6 @@ void CGxDeviceD3d::IXformSetProjection(const C44Matrix& matrix) {
 
     this->m_xforms[GxXform_Projection].m_dirty = 1;
     memcpy(&this->m_projNative, &projNative, sizeof(this->m_projNative));
-#else
-    // Without the DirectX::XMMATRIX, we can soldier on
-    // with a Tempest matrix
-    C44Matrix projNative;
-    memcpy(&projNative, &matrix, sizeof(projNative));
-
-    if (NotEqual(projNative.c3, 1.0f, WHOA_EPSILON_1) && NotEqual(projNative.c3, 0.0f, WHOA_EPSILON_1)) {
-        projNative = projNative * (1.0f / projNative.c3);
-    }
-
-    if (projNative.d3 == 0.0f) {
-        auto v5 = -(projNative.d2 / (projNative.c2 + 1.0f));
-        auto v6 = -(projNative.d2 / (projNative.c2 - 1.0f));
-        projNative.c2 = v6 / (v6 - v5);
-        projNative.d2 = v6 * v5 / (v5 - v6);
-    } else {
-        auto v8 = 1.0f / projNative.c2;
-        auto v9 = (-1.0f - projNative.d2) * v8;
-        auto v10 = v8 * (1.0f - projNative.d2);
-        projNative.c2 = 1.0f / (v10 - v9);
-        projNative.d2 = v9 / (v9 - v10);
-    }
-
-    if (!this->MasterEnable(GxMasterEnable_NormalProjection) && projNative.d3 != 1.0f) {
-        C44Matrix shrink = {
-            0.2f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.2f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.2f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        };
-
-        projNative = projNative * shrink;
-    }
-
-    this->m_xforms[GxXform_Projection].m_dirty = 1;
-    memcpy(&this->m_projNative, &projNative, sizeof(this->m_projNative));
-#endif
 }
 
 void CGxDeviceD3d::IXformSetViewport() {
