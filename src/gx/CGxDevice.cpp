@@ -273,7 +273,7 @@ void CGxDevice::DeviceSetCurWindow(const CRect& rect) {
     this->m_curWindowRect = rect;
 }
 
-void CGxDevice::DeviceSetDefWindow(CRect const& rect) {
+void CGxDevice::DeviceSetDefWindow(const CRect& rect) {
     this->m_defWindowRect = rect;
     this->DeviceSetCurWindow(rect);
 }
