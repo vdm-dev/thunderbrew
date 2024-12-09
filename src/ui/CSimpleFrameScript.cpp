@@ -481,6 +481,8 @@ int32_t CSimpleFrame_SetBackdropColor(lua_State* L) {
     if (object->m_backdrop) {
         object->m_backdrop->SetVertexColor(color);
     }
+
+    return 0;
 }
 
 int32_t CSimpleFrame_GetBackdropBorderColor(lua_State* L) {
@@ -508,6 +510,8 @@ int32_t CSimpleFrame_SetBackdropBorderColor(lua_State* L) {
     if (object->m_backdrop) {
         object->m_backdrop->SetBorderVertexColor(color);
     }
+
+    return 0;
 }
 
 int32_t CSimpleFrame_SetDepth(lua_State* L) {

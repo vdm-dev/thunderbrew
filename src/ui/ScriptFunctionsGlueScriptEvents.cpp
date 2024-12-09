@@ -19,7 +19,12 @@ int32_t Script_IsShiftKeyDown(lua_State* L) {
 }
 
 int32_t Script_GetBuildInfo(lua_State* L) {
-    WHOA_UNIMPLEMENTED(0);
+    lua_pushstring(L, "WHOA");
+    lua_pushstring(L, "Release");
+    lua_pushstring(L, "3.3.5");
+    lua_pushstring(L, "12340");
+    lua_pushstring(L, "Jun 24 2010");
+    return 5;
 }
 
 int32_t Script_GetLocale(lua_State* L) {
@@ -27,7 +32,9 @@ int32_t Script_GetLocale(lua_State* L) {
 }
 
 int32_t Script_GetSavedAccountName(lua_State* L) {
-    WHOA_UNIMPLEMENTED(0);
+    // TODO
+    lua_pushstring(L, "");
+    return 1;
 }
 
 int32_t Script_SetSavedAccountName(lua_State* L) {

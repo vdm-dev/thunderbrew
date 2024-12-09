@@ -4,6 +4,162 @@
 #include "util/Lua.hpp"
 #include "util/Unimplemented.hpp"
 #include <cstdint>
+#include <cctype>
+
+
+// TEMPORARY SOLUTION (based on lstrlib.c from LUA)
+/* maximum size of each formatted item (> len(format('%99.99f', -1e308))) */
+#define MAX_ITEM 512
+/* valid flags in a format specification */
+#define FLAGS "-+ #0"
+/*
+** maximum size of each format specification (such as '%-099.99d')
+** (+10 accounts for %99.99x plus margin of error)
+*/
+#define MAX_FORMAT (sizeof(FLAGS) + sizeof(LUA_INTFRMLEN) + 10)
+
+#define uchar(c) ((unsigned char)(c))
+
+
+static void addchar(char* b, char ch) {
+    auto len = strlen(b);
+    b[len++] = ch;
+    b[len] = '\0';
+}
+
+static void addquoted(lua_State* L, char* b, int arg) {
+    size_t l;
+    const char* s = luaL_checklstring(L, arg, &l);
+    addchar(b, '"');
+    while (l--) {
+        switch (*s) {
+        case '"':
+        case '\\':
+        case '\n': {
+            addchar(b, '\\');
+            addchar(b, *s);
+            break;
+        }
+        case '\r': {
+            strcat(b, "\\r");
+            break;
+        }
+        case '\0': {
+            strcat(b, "\\000");
+            break;
+        }
+        default: {
+            addchar(b, *s);
+            break;
+        }
+        }
+        s++;
+    }
+    addchar(b, '"');
+}
+
+static const char* scanformat(lua_State* L, const char* strfrmt, char* form) {
+    const char* p = strfrmt;
+    while (*p != '\0' && strchr(FLAGS, *p) != NULL)
+        p++; /* skip flags */
+    if ((size_t)(p - strfrmt) >= sizeof(FLAGS))
+        luaL_error(L, "invalid format (repeated flags)");
+    if (isdigit(uchar(*p)))
+        p++; /* skip width */
+    if (isdigit(uchar(*p)))
+        p++; /* (2 digits at most) */
+    if (*p == '.') {
+        p++;
+        if (isdigit(uchar(*p)))
+            p++; /* skip precision */
+        if (isdigit(uchar(*p)))
+            p++; /* (2 digits at most) */
+    }
+    if (isdigit(uchar(*p)))
+        luaL_error(L, "invalid format (width or precision too long)");
+    *(form++) = '%';
+    strncpy(form, strfrmt, p - strfrmt + 1);
+    form += p - strfrmt + 1;
+    *form = '\0';
+    return p;
+}
+
+static void addintlen(char* form) {
+    size_t l = strlen(form);
+    char spec = form[l - 1];
+    strcpy(form + l - 1, LUA_INTFRMLEN);
+    form[l + sizeof(LUA_INTFRMLEN) - 2] = spec;
+    form[l + sizeof(LUA_INTFRMLEN) - 1] = '\0';
+}
+
+static int str_format(lua_State* L, char* b) {
+    int arg = 2;
+    size_t sfl;
+    const char* strfrmt = luaL_checklstring(L, arg, &sfl);
+    const char* strfrmt_end = strfrmt + sfl;
+    while (strfrmt < strfrmt_end) {
+        if (*strfrmt != '%')
+            addchar(b, *strfrmt++);
+        else if (*++strfrmt == '%')
+            addchar(b, *strfrmt++); /* %% */
+        else {                            /* format item */
+            char form[MAX_FORMAT];        /* to store the format (`%...') */
+            char buff[MAX_ITEM];          /* to store the formatted item */
+            arg++;
+            strfrmt = scanformat(L, strfrmt, form);
+            switch (*strfrmt++) {
+            case 'c': {
+                sprintf(buff, form, (int)luaL_checknumber(L, arg));
+                break;
+            }
+            case 'd':
+            case 'i': {
+                addintlen(form);
+                sprintf(buff, form, (LUA_INTFRM_T)luaL_checknumber(L, arg));
+                break;
+            }
+            case 'o':
+            case 'u':
+            case 'x':
+            case 'X': {
+                addintlen(form);
+                sprintf(buff, form, (unsigned LUA_INTFRM_T)luaL_checknumber(L, arg));
+                break;
+            }
+            case 'e':
+            case 'E':
+            case 'f':
+            case 'g':
+            case 'G': {
+                sprintf(buff, form, (double)luaL_checknumber(L, arg));
+                break;
+            }
+            case 'q': {
+                addquoted(L, b, arg);
+                continue; /* skip the 'addsize' at the end */
+            }
+            case 's': {
+                size_t l;
+                const char* s = luaL_checklstring(L, arg, &l);
+                if (!strchr(form, '.') && l >= 100) {
+                    /* no precision and string is too long to be formatted;
+                       keep original string */
+                    continue; /* skip the `addsize' at the end */
+                } else {
+                    sprintf(buff, form, s);
+                    break;
+                }
+            }
+            default: { /* also treat cases `pnLlh' */
+                return luaL_error(L, "invalid option " LUA_QL("%%%c") " to " LUA_QL("format"), *(strfrmt - 1));
+            }
+            }
+            strcat(b, buff);
+        }
+    }
+    return 1;
+}
+// END OF TEMPORARY SOLUTION
 
 int32_t CSimpleFontString_IsObjectType(lua_State* L) {
     WHOA_UNIMPLEMENTED(0);
@@ -132,7 +288,24 @@ int32_t CSimpleFontString_SetText(lua_State* L) {
 }
 
 int32_t CSimpleFontString_SetFormattedText(lua_State* L) {
-    WHOA_UNIMPLEMENTED(0);
+    if (lua_type(L, 1) != LUA_TTABLE) {
+        luaL_error(L, "Attempt to find 'this' in non-table object (used '.' instead of ':' ?)");
+        return 0;
+    }
+
+    auto type = CSimpleFontString::GetObjectType();
+    auto string = static_cast<CSimpleFontString*>(FrameScript_GetObjectThis(L, type));
+
+    if (!string->m_font) {
+        luaL_error(L, "%s:SetText(): Font not set", string->GetDisplayName());
+        return 0;
+    }
+
+    char b[2048] = {};
+    str_format(L, b);
+    string->SetText(b, 0);
+
+    return 0;
 }
 
 int32_t CSimpleFontString_GetTextColor(lua_State* L) {
