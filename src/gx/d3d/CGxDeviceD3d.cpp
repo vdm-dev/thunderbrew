@@ -1107,6 +1107,17 @@ void CGxDeviceD3d::IRsSendToHw(EGxRenderState which) {
         break;
     }
 
+    case GxRs_Lighting: {
+        int32_t lightingEnable = 0;
+
+        if (this->MasterEnable(GxMasterEnable_Lighting)) {
+            lightingEnable = static_cast<int32_t>(state->m_value);
+        }
+
+        this->m_d3dDevice->SetRenderState(D3DRS_LIGHTING, lightingEnable);
+        break;
+    }
+
     case GxRs_DepthTest:
     case GxRs_DepthFunc: {
         auto depthTest = static_cast<uint32_t>((&this->m_appRenderStates[GxRs_DepthTest])->m_value);
