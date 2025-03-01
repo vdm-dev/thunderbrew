@@ -4,6 +4,7 @@
 #include "console/Command.hpp"
 #include "console/Screen.hpp"
 #include "event/Event.hpp"
+#include "storm/Unicode.hpp"
 #include <cstdint>
 
 static int32_t s_historyIndex = 0;
@@ -11,23 +12,19 @@ static int32_t s_historyIndex = 0;
 namespace {
 
 int32_t OnChar(const EVENT_DATA_CHAR* data, void* param) {
-    char character[2];
+    char character[8] = {};
 
     if (ConsoleAccessGetEnabled() && EventIsKeyDown(ConsoleGetHotKey())) {
         return 0;
     }
 
     if (ConsoleGetActive()) {
-        character[0] = char(data->ch);
-        character[1] = 0;
+        SUniSPutUTF8(data->ch, character);
 
         PasteInInputLine(character);
         ResetHighlight();
         return 0;
     }
-
-    // SUniSPutUTF8(data->ch, character);
-
 
     return 1;
 }

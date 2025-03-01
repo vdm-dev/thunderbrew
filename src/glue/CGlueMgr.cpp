@@ -366,46 +366,48 @@ void CGlueMgr::PollAccountLogin(int32_t errorCode, const char* msg, int32_t comp
         FrameScript_SignalEvent(4, "%s", msg);
     }
 
-    if (complete) {
-        if (result == 0) {
-            if (errorCode != 2) {
+    if (!complete) {
+        return;
+    }
+
+    if (result == 0) {
+        if (errorCode != 2) {
+            // TODO
+        }
+
+        CGlueMgr::m_idleState = IDLE_NONE;
+        CGlueMgr::m_showedDisconnect = 0;
+
+        if (errorCode == 2) {
+            // TODO CGlueMgr::m_disconnectPending = 1;
+            // TODO ClientServices::Connection()->Disconnect();
+        }
+
+        if (errorCode != 13) {
+            // TODO CCharacterSelection::ClearCharacterList();
+
+            if (ClientServices::GetInstance()->m_realmList.Count()) {
+                FrameScript_SignalEvent(5, nullptr);
+                CRealmList::UpdateList();
+            } else {
                 // TODO
             }
 
-            CGlueMgr::m_idleState = IDLE_NONE;
-            CGlueMgr::m_showedDisconnect = 0;
-
-            if (errorCode == 2) {
-                // TODO CGlueMgr::m_disconnectPending = 1;
-                // TODO ClientServices::Connection()->Disconnect();
-            }
-
-            if (errorCode != 13) {
-                // TODO CCharacterSelection::ClearCharacterList();
-
-                if (ClientServices::GetInstance()->m_realmList.Count()) {
-                    FrameScript_SignalEvent(5, nullptr);
-                    CRealmList::UpdateList();
-                } else {
-                    // TODO
-                }
-
-                return;
-            }
-
-            if (!SStrCmpI(CGlueMgr::m_currentScreen, "charselect", STORM_MAX_STR)) {
-                CGlueMgr::SetScreen("login");
-                return;
-            }
-
             return;
         }
 
-        if (op == COP_CONNECT) {
-            // TODO
-
+        if (!SStrCmpI(CGlueMgr::m_currentScreen, "charselect", STORM_MAX_STR)) {
+            CGlueMgr::SetScreen("login");
             return;
         }
+
+        return;
+    }
+
+    if (op == COP_CONNECT) {
+        // TODO
+
+        return;
     }
 }
 
