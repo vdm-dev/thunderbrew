@@ -12,14 +12,15 @@ static int32_t s_historyIndex = 0;
 namespace {
 
 int32_t OnChar(const EVENT_DATA_CHAR* data, void* param) {
-    char character[8] = {};
+    char character[2] = {};
 
     if (ConsoleAccessGetEnabled() && EventIsKeyDown(ConsoleGetHotKey())) {
         return 0;
     }
 
     if (ConsoleGetActive()) {
-        SUniSPutUTF8(data->ch, character);
+        character[0] = char(data->ch);
+        character[1] = 0;
 
         PasteInInputLine(character);
         ResetHighlight();
