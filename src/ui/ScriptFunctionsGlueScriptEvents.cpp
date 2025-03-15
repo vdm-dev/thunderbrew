@@ -5,6 +5,7 @@
 #include "glue/CGlueMgr.hpp"
 #include "gx/Coordinate.hpp"
 #include "net/connection/ClientConnection.hpp"
+#include "net/Login.hpp"
 #include "ui/CSimpleTop.hpp"
 #include "ui/Types.hpp"
 #include "console/CVar.hpp"
@@ -274,7 +275,12 @@ int32_t Script_GetServerName(lua_State* L) {
 }
 
 int32_t Script_DisconnectFromServer(lua_State* L) {
-    WHOA_UNIMPLEMENTED(0);
+    if (ClientServices::Connection()->IsConnected()) {
+        CGlueMgr::m_disconnectPending = 1;
+        ClientServices::Connection()->Disconnect();
+    }
+    ClientServices::LoginConnection()->Logoff();
+    return 0;
 }
 
 int32_t Script_IsConnectedToServer(lua_State* L) {
