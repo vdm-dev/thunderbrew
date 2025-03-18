@@ -22,7 +22,7 @@
 #include <storm/Error.hpp>
 #include <storm/Log.hpp>
 #include <bc/os/Path.hpp>
-#include <bc/file/File.hpp>
+#include <bc/File.hpp>
 
 
 CVar* Client::g_accountNameVar;
